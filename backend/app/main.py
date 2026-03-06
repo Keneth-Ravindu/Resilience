@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,6 +10,18 @@ from app.api.journals import router as journals_router
 from app.api.workouts import router as workouts_router
 from app.api.nlp_debug import router as nlp_router
 from app.api.analytics import router as analytics_router
+from app.api.rewrite import router as rewrite_router
+from app.api.comments import router as comments_router
+from app.api.mentors import router as mentors_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+
+# Reduce noisy libraries
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -27,6 +41,9 @@ app.include_router(journals_router)
 app.include_router(workouts_router)
 app.include_router(nlp_router)
 app.include_router(analytics_router)
+app.include_router(rewrite_router)
+app.include_router(comments_router)
+app.include_router(mentors_router)
 
 
 @app.get("/health")

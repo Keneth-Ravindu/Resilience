@@ -1,14 +1,21 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
-    HF_HOME: str = r"C:\AI_Models\huggingface"
-    HF_HUB_CACHE: str = r"C:\AI_Models\huggingface\hub"
-    TRANSFORMERS_CACHE: str = r"C:\AI_Models\huggingface\transformers"
-    HF_DATASETS_CACHE: str = r"C:\AI_Models\huggingface\datasets"
+BASE_DIR = Path(__file__).resolve().parents[2]  # .../nlp_service
+MODELS_DIR = BASE_DIR / "models"
 
-    TOXICITY_MODEL: str = "unitary/unbiased-toxic-roberta"
-    EMOTION_MODEL: str = "SamLowe/roberta-base-go_emotions"
+
+class Settings(BaseSettings):
+    # Optional cache dirs
+    HF_HOME: str | None = None
+    HF_HUB_CACHE: str | None = None
+    TRANSFORMERS_CACHE: str | None = None
+    HF_DATASETS_CACHE: str | None = None
+
+    # LOCAL models (relative inside project)
+    TOXICITY_MODEL: str = str(MODELS_DIR / "toxicity_model")
+    EMOTION_MODEL: str = str(MODELS_DIR / "emotion_model")
 
     PORT: int = 8001
 

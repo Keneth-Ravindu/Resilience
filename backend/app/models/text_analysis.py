@@ -35,8 +35,13 @@ class TextAnalysis(Base):
     # UI badge
     tone: Mapped[str | None] = mapped_column(String(30), nullable=True)  # supportive/neutral/harsh
 
-    # Model versions (important for viva)
+    # Model versions
     toxicity_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     emotion_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    # Rewrite suggestion (only if toxic / user requests rewrite)
+    rewrite_suggestion: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rewrite_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    rewrite_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

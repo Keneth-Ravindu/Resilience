@@ -19,6 +19,14 @@ class Settings(BaseSettings):
 
     # Microservices
     NLP_SERVICE_URL: str = "http://127.0.0.1:8001"
+    REWRITE_SERVICE_URL: str = "http://127.0.0.1:8002"
+    
+    # Auto rewrite threshold (fallback if label isn't "toxic")
+    TOXICITY_REWRITE_THRESHOLD: float = 0.5
+    
+    # Rewrite trigger rule
+    REWRITE_WHEN_TOXICITY_SCORE_GTE: float = 0.5
+    REWRITE_WHEN_LABEL_IS_TOXIC: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
