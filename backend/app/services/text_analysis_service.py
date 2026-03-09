@@ -28,6 +28,8 @@ def _should_auto_rewrite(toxicity_label: str | None, toxicity_score: float | Non
     """
     label = _norm_label(toxicity_label)
     threshold = float(getattr(settings, "TOXICITY_REWRITE_THRESHOLD", 0.65))
+    #Here is where you can see the toxicity score
+    
 
     score = None if toxicity_score is None else float(toxicity_score)
 
