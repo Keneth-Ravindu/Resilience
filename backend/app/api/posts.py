@@ -20,17 +20,27 @@ def create_post(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    # 1) Save post
+    media_type = (payload.media_type or "").strip().lower() or None
+    if media_type not in {None, "image", "video"}:
+        raise HTTPException(status_code=400, detail="media_type must be 'image' or 'video'")
+
+    if payload.media_url and not media_type:
+        raise HTTPException(status_code=400, detail="media_type is required when media_url is provided")
+
+    if media_type and not payload.media_url:
+        raise HTTPException(status_code=400, detail="media_url is required when media_type is provided")
+
     post = Post(
         user_id=user.id,
         content=payload.content,
-        tags=payload.tags,  # already list[str] from schema
+        media_url=payload.media_url,
+        media_type=media_type,
+        tags=payload.tags,
     )
     db.add(post)
     db.commit()
     db.refresh(post)
 
-    # 2) Run NLP + store analysis (do not fail post creation if NLP fails)
     try:
         analyze_and_store_text(
             db,
@@ -40,7 +50,7 @@ def create_post(
             text=post.content,
         )
     except Exception as e:
-        db.rollback()  # clear failed transaction state if any
+        db.rollback()
         logger.exception("NLP analysis failed for post %s error=%s", post.id, str(e))
 
     return post
@@ -50,7 +60,35 @@ def create_post(
 def list_posts(
     db: Session = Depends(get_db),
 ):
-    return db.query(Post).order_by(Post.created_at.desc()).limit(50).all()
+    return db.query(Post).order_by(Post.created_at.desc()).limit(100).all()
+
+
+@router.get("/{post_id}", response_model=PostOut)
+def get_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    post = db.get(Post, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return post
+
+
+@router.get("/{post_id}/comments", response_model=list[CommentOut])
+def list_comments(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    post = db.get(Post, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    return (
+        db.query(Comment)
+        .filter(Comment.post_id == post_id)
+        .order_by(Comment.created_at.asc())
+        .all()
+    )
 
 
 @router.post("/{post_id}/comments", response_model=CommentOut, status_code=status.HTTP_201_CREATED)
@@ -64,7 +102,6 @@ def add_comment(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    # 1) Save comment
     comment = Comment(
         post_id=post_id,
         user_id=user.id,
@@ -74,7 +111,6 @@ def add_comment(
     db.commit()
     db.refresh(comment)
 
-    # 2) Run NLP + store analysis (do not fail comment creation if NLP fails)
     try:
         analyze_and_store_text(
             db,
@@ -90,25 +126,18 @@ def add_comment(
     return comment
 
 
-# ---------------------------------------------------
-# GET /posts/{id}/analysis
-# ---------------------------------------------------
 @router.get("/{post_id}/analysis")
 def get_post_analysis(
     post_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
 ):
-    # Make sure post exists and belongs to the user
     post = db.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if post.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Not allowed")
 
     analysis = get_latest_analysis_for_object(
         db,
-        user_id=user.id,
+        user_id=post.user_id,
         object_type="post",
         object_id=post_id,
     )
@@ -116,7 +145,6 @@ def get_post_analysis(
     if not analysis:
         raise HTTPException(status_code=404, detail="No analysis found for this post")
 
-    # Return only what frontend needs (safe + clean)
     return {
         "post_id": post_id,
         "analysis_id": analysis.id,

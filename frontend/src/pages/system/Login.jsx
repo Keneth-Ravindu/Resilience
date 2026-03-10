@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../../api/client";
 import { useAuth } from "../../auth/useAuth";
 import logo from "../../assets/logo.png";
+import CustomSelect from "../../components/CustomSelect";
 
 
 export default function Login() {
@@ -68,14 +69,17 @@ export default function Login() {
                         onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-
                     <div className="field">
-                        <label>Role (temporary frontend selector)</label>
-                        <select value={role} onChange={(e) => setRole(e.target.value)}>
-                        <option value="user">user</option>
-                        <option value="mentor">mentor</option>
-                        <option value="admin">admin</option>
-                        </select>
+                    <CustomSelect
+                        label="Role (temporary frontend selector)"
+                        value={role}
+                        onChange={setRole}
+                        options={[
+                        { value: "user", label: "user" },
+                        { value: "mentor", label: "mentor" },
+                        { value: "admin", label: "admin" },
+                        ]}
+                    />
                     </div>
 
                     <button className="btn btn-primary" type="submit">

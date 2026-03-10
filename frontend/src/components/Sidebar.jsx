@@ -14,19 +14,24 @@ export default function Sidebar() {
             <NavLink className="nav-link" to="/app" end>
                 Dashboard
             </NavLink>
-            <NavLink className="nav-link" to="/app/feed">
+
+            <NavLink className="nav-link" to="/app/feed" end>
                 Feed
             </NavLink>
-            <NavLink className="nav-link" to="/app/posts/new">
+
+            <NavLink className="nav-link" to="/app/posts/new" end>
                 Create Post
             </NavLink>
-            <NavLink className="nav-link" to="/app/journals">
+
+            <NavLink className="nav-link" to="/app/journals" end>
                 Journals
             </NavLink>
-            <NavLink className="nav-link" to="/app/journals/new">
+
+            <NavLink className="nav-link" to="/app/journals/new" end>
                 Create Journal
             </NavLink>
-            <NavLink className="nav-link" to="/app/analytics">
+
+            <NavLink className="nav-link" to="/app/analytics" end>
                 Analytics
             </NavLink>
             </>

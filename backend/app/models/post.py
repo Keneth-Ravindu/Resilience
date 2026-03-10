@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Text, Integer, JSON
+from sqlalchemy import DateTime, ForeignKey, Text, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -22,7 +22,18 @@ class Post(Base):
         nullable=False
     )
 
-    # ✅ Now stored as proper JSON list
+    # optional single media attachment for MVP
+    media_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True
+    )
+
+    # "image" | "video"
+    media_type: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True
+    )
+
     tags: Mapped[Optional[List[str]]] = mapped_column(
         JSON,
         nullable=True
