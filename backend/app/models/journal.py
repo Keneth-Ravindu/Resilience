@@ -16,4 +16,6 @@ class JournalEntry(Base):
     title: Mapped[str | None] = mapped_column(String(200), nullable=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
+    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="private", index=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
