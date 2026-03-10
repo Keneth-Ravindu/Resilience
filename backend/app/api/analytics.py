@@ -209,10 +209,54 @@ def analytics_summary(
         "tone_counts": tone_counts,
         "top_emotions": [e[0] for e in sorted_emotions[:5]],
     }
+    
+@router.get("/activity/counts")
+def analytics_activity_counts(
+    days: int = Query(30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Returns real analyzed object counts for the current user
+    within the given date range.
+    """
+    since_dt = datetime.utcnow() - timedelta(days=days)
+
+    rows = (
+        db.query(
+            TextAnalysis.object_type,
+            func.count(TextAnalysis.id).label("count"),
+        )
+        .filter(
+            TextAnalysis.user_id == user.id,
+            TextAnalysis.created_at >= since_dt,
+        )
+        .group_by(TextAnalysis.object_type)
+        .all()
+    )
+
+    counts = {
+        "posts": 0,
+        "journals": 0,
+        "comments": 0,
+    }
+
+    for object_type, count in rows:
+        if object_type == "post":
+            counts["posts"] = int(count)
+        elif object_type == "journal":
+            counts["journals"] = int(count)
+        elif object_type == "comment":
+            counts["comments"] = int(count)
+
+    return {
+        "days": days,
+        "counts": counts,
+    }
 
 
 # ---------------------------------------------------
-# 📈 TOXICITY TIMELINE (fills missing days with 0)
+# TOXICITY TIMELINE (fills missing days with 0)
 # ---------------------------------------------------
 @router.get("/toxicity/timeline")
 def toxicity_timeline(
@@ -1065,6 +1109,7 @@ def mood_dashboard_bundle_by_type(
     by_type = {
         "post": _build_for("post"),
         "journal": _build_for("journal"),
+        "comment": _build_for("comment"),
     }
 
     t1 = time.perf_counter()

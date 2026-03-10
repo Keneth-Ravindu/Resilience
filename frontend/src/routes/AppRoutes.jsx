@@ -1,0 +1,67 @@
+import { Route, Routes } from "react-router-dom";
+
+import Landing from "../pages/system/Landing";
+import RequireAuth from "../auth/RequireAuth";
+import RequireRole from "../auth/RequireRole";
+import AppLayout from "../layouts/AppLayout";
+
+import HomeRedirect from "../pages/system/HomeRedirect";
+import Login from "../pages/system/Login";
+import Register from "../pages/system/Register";
+import NotAuthorized from "../pages/system/NotAuthorized";
+import NotFound from "../pages/system/NotFound";
+
+import UserDashboard from "../pages/user/UserDashboard";
+import AnalyticsOverview from "../pages/user/AnalyticsOverview";
+
+import MentorDashboard from "../pages/mentor/MentorDashboard";
+import Requests from "../pages/mentor/Requests";
+import Mentees from "../pages/mentor/Mentees";
+import MenteeAnalytics from "../pages/mentor/MenteeAnalytics";
+
+import AdminDashboard from "../pages/admin/AdminDashboard";
+
+import Feed from "../pages/user/Feed";
+import CreatePost from "../pages/user/CreatePost";
+import Journals from "../pages/user/Journals";
+import CreateJournal from "../pages/user/CreateJournal";
+
+export default function AppRoutes() {
+    return (
+        <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/not-authorized" element={<NotAuthorized />} />
+
+            <Route element={<RequireAuth />}>
+                <Route element={<AppLayout />}>
+                    <Route element={<RequireRole allow={["user"]} />}>
+                        <Route path="/app" element={<UserDashboard />} />
+                        <Route path="/app/feed" element={<Feed />} />
+                        <Route path="/app/posts/new" element={<CreatePost />} />
+                        <Route path="/app/journals" element={<Journals />} />
+                        <Route path="/app/journals/new" element={<CreateJournal />} />
+                        <Route path="/app/analytics" element={<AnalyticsOverview />} />
+                    </Route>
+
+                    <Route element={<RequireRole allow={["mentor"]} />}>
+                        <Route path="/mentor" element={<MentorDashboard />} />
+                        <Route path="/mentor/requests" element={<Requests />} />
+                        <Route path="/mentor/mentees" element={<Mentees />} />
+                        <Route
+                        path="/mentor/mentees/:menteeId/analytics"
+                        element={<MenteeAnalytics />}
+                        />
+                    </Route>
+
+                    <Route element={<RequireRole allow={["admin"]} />}>
+                        <Route path="/admin" element={<AdminDashboard />} />
+                    </Route>
+                </Route>
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+        </Routes>
+    );
+}
