@@ -15,7 +15,10 @@ export default function CreateJournal() {
   const [error, setError] = useState("");
 
   function handleUseRewrite(rewriteText) {
-    setFinalContent(rewriteText || "");
+    if (!rewriteText) return;
+
+    setContent(rewriteText);
+    setFinalContent("");
   }
 
   async function submitJournal(e) {

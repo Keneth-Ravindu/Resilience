@@ -290,7 +290,10 @@ function CommentSection({ postId }) {
   }, [postId]);
 
   function handleUseRewrite(rewriteText) {
-    setFinalContent(rewriteText || "");
+    if (!rewriteText) return;
+
+    setContent(rewriteText);
+    setFinalContent("");
   }
 
   const submitComment = async (e) => {

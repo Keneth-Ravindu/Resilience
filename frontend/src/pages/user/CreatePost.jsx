@@ -21,7 +21,10 @@ export default function CreatePost() {
   }, [selectedFile]);
 
   function handleUseRewrite(rewriteText) {
-    setFinalContent(rewriteText || "");
+    if (!rewriteText) return;
+
+    setContent(rewriteText);
+    setFinalContent("");
   }
 
   const handleFileChange = (e) => {
