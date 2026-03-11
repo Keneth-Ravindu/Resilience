@@ -31,13 +31,15 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         name=payload.name,
         email=payload.email,
         hashed_password=hash_password(payload.password),
+        display_name=payload.name,
+        profile_picture_url=None,
+        status_text=None,
         age_range=payload.age_range,
         fitness_level=payload.fitness_level,
     )
     return create_user(db, user)
 
 
-# OAuth2 form login (for Swagger Authorize)
 @router.post("/login", response_model=Token)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = get_user_by_email(db, form.username)  # username == email
@@ -48,7 +50,6 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     return Token(access_token=token)
 
 
-# JSON login (optional for frontend)
 @router.post("/login-json", response_model=Token)
 def login_json(payload: LoginJSON, db: Session = Depends(get_db)):
     user = get_user_by_email(db, payload.email)

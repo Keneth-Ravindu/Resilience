@@ -18,5 +18,8 @@ class JournalOut(BaseModel):
     visibility: str
     created_at: datetime
 
+    reaction_counts: dict[str, int] | None = None
+    total_reactions: int | None = None
+
     class Config:
         from_attributes = True

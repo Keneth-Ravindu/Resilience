@@ -1,17 +1,36 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from app.db.session import get_db
 from app.schemas.journal import JournalCreate, JournalOut
 from app.services.security import get_current_user
 from app.models.user import User
 from app.models.journal import JournalEntry
+from app.models.reaction import Reaction
 
 from app.repositories.text_analysis_repo import get_latest_analysis_for_object
 from app.schemas.text_analysis import TextAnalysisOut
 
 router = APIRouter(prefix="/journals", tags=["journals"])
+
+def get_reaction_counts(db: Session, object_type: str, object_id: int):
+    rows = (
+        db.query(
+            Reaction.reaction_type,
+            func.count(Reaction.id)
+        )
+        .filter(
+            Reaction.object_type == object_type,
+            Reaction.object_id == object_id
+        )
+        .group_by(Reaction.reaction_type)
+        .all()
+    )
+
+    counts = {reaction: count for reaction, count in rows}
+    total = sum(counts.values())
+    return counts, total
 
 
 @router.post("", response_model=JournalOut, status_code=status.HTTP_201_CREATED)
@@ -51,6 +70,10 @@ def create_journal(
     except Exception as e:
         db.rollback()
         print(f"[WARN] NLP analysis failed for journal {entry.id}: {e}")
+        
+    counts, total = get_reaction_counts(db, "journal", entry.id)
+    entry.reaction_counts = counts
+    entry.total_reactions = total
 
     return entry
 
@@ -79,14 +102,21 @@ def list_journals(
         )
     )
 
-    if requested_visibility:
-        q = q.filter(JournalEntry.visibility == requested_visibility)
-
-    return (
+    journals = (
         q.order_by(JournalEntry.entry_date.desc(), JournalEntry.created_at.desc())
         .limit(100)
         .all()
     )
+
+    enriched_journals = []
+
+    for journal in journals:
+        counts, total = get_reaction_counts(db, "journal", journal.id)
+        journal.reaction_counts = counts
+        journal.total_reactions = total
+        enriched_journals.append(journal)
+
+    return enriched_journals
 
 
 @router.get("/{journal_id}", response_model=JournalOut)
@@ -102,6 +132,10 @@ def get_journal(
     # owner can always view, others only if public
     if journal.user_id != user.id and journal.visibility != "public":
         raise HTTPException(status_code=403, detail="Not allowed")
+    
+    counts, total = get_reaction_counts(db, "journal", journal.id)
+    journal.reaction_counts = counts
+    journal.total_reactions = total
 
     return journal
 

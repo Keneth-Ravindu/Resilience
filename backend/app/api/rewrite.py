@@ -13,9 +13,8 @@ class RewriteRequest(BaseModel):
 
 
 @router.post("")
-def manual_rewrite(
+def suggest_rewrite(
     payload: RewriteRequest,
     user: User = Depends(get_current_user),
 ):
-    # user is only to protect endpoint (JWT required)
-    return rewrite_text(payload.text.strip())
+    return rewrite_text(payload.text)

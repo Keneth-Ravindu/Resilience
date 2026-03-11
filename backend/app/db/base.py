@@ -6,4 +6,7 @@ class Base(DeclarativeBase):
 
 
 # Import models so Alembic detects them
-from app.models import *  # noqa: F401,F403,E402
+from app.models import *  
+
+from app.models.friend_request import FriendRequest
+from app.models.reaction import Reaction

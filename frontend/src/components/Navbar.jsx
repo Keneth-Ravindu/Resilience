@@ -1,25 +1,227 @@
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import api from "../api/client";
 import logo from "../assets/logo.png";
 
+const API_BASE_URL = "http://127.0.0.1:8000";
+
+function resolveMediaUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_BASE_URL}${url}`;
+}
+
+function getDisplayName(user) {
+  if (!user) return "User";
+  return user.display_name || user.name || `User #${user.id}`;
+}
+
 export default function Navbar() {
-    const { role, logout } = useAuth();
+  const { role, logout } = useAuth();
 
-    return (
-        <header className="topbar">
-        <div className="brand-wrap">
-            <img src={logo} alt="Resilience Logo" className="navbar-logo" />
-            <div>
-                <h1 className="brand-title">Resilience</h1>
-                <p className="brand-subtitle">emotion intelligence platform</p>
+  const [user, setUser] = useState(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [sendingRequestId, setSendingRequestId] = useState(null);
+  const [sentRequestIds, setSentRequestIds] = useState([]);
+
+  const searchBoxRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    api
+      .get("/users/me")
+      .then((res) => {
+        if (isMounted) setUser(res.data);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+
+    if (!trimmed) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      setSearching(true);
+
+      api
+        .get(`/users/search?q=${encodeURIComponent(trimmed)}`)
+        .then((res) => {
+          const filtered = (res.data || []).filter((item) => item.id !== user?.id);
+          setResults(filtered);
+          setShowDropdown(true);
+        })
+        .catch(() => {
+          setResults([]);
+          setShowDropdown(true);
+        })
+        .finally(() => {
+          setSearching(false);
+        });
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [query, user?.id]);
+
+  async function sendFriendRequest(targetUserId) {
+    try {
+      setSendingRequestId(targetUserId);
+      await api.post(`/friend-requests/${targetUserId}`);
+      setSentRequestIds((prev) => [...new Set([...prev, targetUserId])]);
+    } catch (err) {
+      console.error("Failed to send friend request", err);
+    } finally {
+      setSendingRequestId(null);
+    }
+  }
+
+  const displayName = user?.display_name || user?.name || "User";
+
+  return (
+    <header className="topbar">
+      <div className="brand-wrap">
+        <img src={logo} alt="Resilience Logo" className="navbar-logo" />
+        <div>
+          <h1 className="brand-title">Resilience</h1>
+          <p className="brand-subtitle">emotion intelligence platform</p>
+        </div>
+      </div>
+
+      {role === "user" && (
+        <div className="navbar-search-wrap" ref={searchBoxRef}>
+          <input
+            type="text"
+            className="navbar-search-input"
+            placeholder="Search members..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => {
+              if (query.trim()) setShowDropdown(true);
+            }}
+          />
+
+          {showDropdown && query.trim() && (
+            <div className="navbar-search-dropdown glass-card">
+              {searching ? (
+                <p className="navbar-search-empty">Searching...</p>
+              ) : results.length === 0 ? (
+                <p className="navbar-search-empty">No users found.</p>
+              ) : (
+                <div className="navbar-search-results">
+                  {results.map((result) => {
+                    const resultName = getDisplayName(result);
+                    const isSent = sentRequestIds.includes(result.id);
+                    const isSending = sendingRequestId === result.id;
+
+                    return (
+                      <div key={result.id} className="navbar-search-result-card">
+                        <Link
+                          to={`/app/profile/${result.id}`}
+                          className="navbar-search-result"
+                          onClick={() => {
+                            setShowDropdown(false);
+                            setQuery("");
+                          }}
+                        >
+                          {result.profile_picture_url ? (
+                            <img
+                              src={resolveMediaUrl(result.profile_picture_url)}
+                              alt={resultName}
+                              className="navbar-search-avatar"
+                            />
+                          ) : (
+                            <div className="navbar-search-avatar navbar-search-avatar-fallback">
+                              {resultName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+
+                          <div className="navbar-search-result-content">
+                            <p className="navbar-search-name">{resultName}</p>
+                            <p className="navbar-search-status">
+                              {result.status_text || "View profile"}
+                            </p>
+                          </div>
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm navbar-request-btn"
+                          disabled={isSent || isSending}
+                          onClick={() => sendFriendRequest(result.id)}
+                        >
+                          {isSending ? "Sending..." : isSent ? "Request Sent" : "Add Friend"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+          )}
+        </div>
+      )}
+
+      <div className="topbar-actions">
+        <div className="navbar-user">
+          {user?.profile_picture_url ? (
+            <img
+              src={resolveMediaUrl(user.profile_picture_url)}
+              className="navbar-avatar"
+              alt={displayName}
+            />
+          ) : (
+            <div className="navbar-avatar-fallback">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
+
+          <span className="navbar-username">{displayName}</span>
         </div>
 
-        <div className="topbar-actions">
-            <span className="role-badge">{role}</span>
-            <button className="btn btn-outline" onClick={logout}>
-            Logout
-            </button>
-        </div>
-        </header>
-    );
+        <span className="role-badge">{role}</span>
+
+        <button className="btn btn-outline" onClick={logout}>
+          Logout
+        </button>
+      </div>
+    </header>
+  );
 }

@@ -5,7 +5,6 @@ import RequireAuth from "../auth/RequireAuth";
 import RequireRole from "../auth/RequireRole";
 import AppLayout from "../layouts/AppLayout";
 
-import HomeRedirect from "../pages/system/HomeRedirect";
 import Login from "../pages/system/Login";
 import Register from "../pages/system/Register";
 import NotAuthorized from "../pages/system/NotAuthorized";
@@ -13,6 +12,9 @@ import NotFound from "../pages/system/NotFound";
 
 import UserDashboard from "../pages/user/UserDashboard";
 import AnalyticsOverview from "../pages/user/AnalyticsOverview";
+import Settings from "../pages/user/Settings";
+import PublicProfile from "../pages/user/PublicProfile";
+import UserSearch from "../pages/user/UserSearch";
 
 import MentorDashboard from "../pages/mentor/MentorDashboard";
 import Requests from "../pages/mentor/Requests";
@@ -25,6 +27,8 @@ import Feed from "../pages/user/Feed";
 import CreatePost from "../pages/user/CreatePost";
 import Journals from "../pages/user/Journals";
 import CreateJournal from "../pages/user/CreateJournal";
+
+import MyProfile from "../pages/user/MyProfile";
 
 export default function AppRoutes() {
     return (
@@ -39,10 +43,14 @@ export default function AppRoutes() {
                     <Route element={<RequireRole allow={["user"]} />}>
                         <Route path="/app" element={<UserDashboard />} />
                         <Route path="/app/feed" element={<Feed />} />
+                        <Route path="/app/me" element={<MyProfile />} />
                         <Route path="/app/posts/new" element={<CreatePost />} />
                         <Route path="/app/journals" element={<Journals />} />
                         <Route path="/app/journals/new" element={<CreateJournal />} />
                         <Route path="/app/analytics" element={<AnalyticsOverview />} />
+                        <Route path="/app/settings" element={<Settings />} />
+                        <Route path="/app/profile/:userId" element={<PublicProfile />} />
+                        <Route path="/app/search" element={<UserSearch />} />
                     </Route>
 
                     <Route element={<RequireRole allow={["mentor"]} />}>
@@ -50,8 +58,8 @@ export default function AppRoutes() {
                         <Route path="/mentor/requests" element={<Requests />} />
                         <Route path="/mentor/mentees" element={<Mentees />} />
                         <Route
-                        path="/mentor/mentees/:menteeId/analytics"
-                        element={<MenteeAnalytics />}
+                            path="/mentor/mentees/:menteeId/analytics"
+                            element={<MenteeAnalytics />}
                         />
                     </Route>
 

@@ -22,13 +22,11 @@ class Post(Base):
         nullable=False
     )
 
-    # optional single media attachment for MVP
     media_url: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True
     )
 
-    # "image" | "video"
     media_type: Mapped[str | None] = mapped_column(
         String(20),
         nullable=True
@@ -43,6 +41,12 @@ class Post(Base):
         DateTime,
         default=datetime.utcnow,
         index=True
+    )
+
+    author = relationship(
+        "User",
+        back_populates="posts",
+        foreign_keys=[user_id]
     )
 
     comments = relationship(
@@ -81,4 +85,10 @@ class Comment(Base):
     post = relationship(
         "Post",
         back_populates="comments"
+    )
+
+    author = relationship(
+        "User",
+        back_populates="comments",
+        foreign_keys=[user_id]
     )

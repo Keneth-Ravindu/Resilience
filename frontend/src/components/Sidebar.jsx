@@ -10,31 +10,40 @@ export default function Sidebar() {
         <p className="sidebar-label">Navigation</p>
 
         {role === "user" && (
-            <>
+        <>
             <NavLink className="nav-link" to="/app" end>
-                Dashboard
+            Dashboard
             </NavLink>
 
-            <NavLink className="nav-link" to="/app/feed" end>
-                Feed
+            <NavLink className="nav-link" to="/app/feed">
+            Feed
             </NavLink>
 
-            <NavLink className="nav-link" to="/app/posts/new" end>
-                Create Post
+            {/* NEW */}
+            <NavLink className="nav-link" to="/app/me">
+            My Profile
+            </NavLink>
+
+            <NavLink className="nav-link" to="/app/posts/new">
+            Create Post
             </NavLink>
 
             <NavLink className="nav-link" to="/app/journals" end>
-                Journals
+            Journals
             </NavLink>
 
-            <NavLink className="nav-link" to="/app/journals/new" end>
-                Create Journal
+            <NavLink className="nav-link" to="/app/journals/new">
+            Create Journal
             </NavLink>
 
-            <NavLink className="nav-link" to="/app/analytics" end>
-                Analytics
+            <NavLink className="nav-link" to="/app/analytics">
+            Analytics
             </NavLink>
-            </>
+
+            <NavLink className="nav-link" to="/app/settings">
+            Settings
+            </NavLink>
+        </>
         )}
 
         {role === "mentor" && (
@@ -42,9 +51,11 @@ export default function Sidebar() {
             <NavLink className="nav-link" to="/mentor" end>
               Mentor Dashboard
             </NavLink>
+
             <NavLink className="nav-link" to="/mentor/requests">
               Requests
             </NavLink>
+
             <NavLink className="nav-link" to="/mentor/mentees">
               Mentees
             </NavLink>
