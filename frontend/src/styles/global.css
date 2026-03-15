@@ -103,8 +103,9 @@ h4,
 .section-title,
 .auth-title,
 .landing-title {
-  font-family: "Space Grotesk", sans-serif;
-  letter-spacing: -0.02em;
+  font-family: "Inter", sans-serif;
+  letter-spacing: 0.02em;
+  
 }
 
 .fade-in {

@@ -14,6 +14,8 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [moderationResult, setModerationResult] = useState(null);
+  const [checkingModeration, setCheckingModeration] = useState(false);
 
   const previewUrl = useMemo(() => {
     if (!selectedFile) return null;
@@ -71,6 +73,24 @@ export default function CreatePost() {
     setError("");
   };
 
+  const checkModeration = async (textToCheck) => {
+    try {
+      setCheckingModeration(true);
+
+      const res = await api.post("/moderation/check-text", {
+        text: textToCheck,
+      });
+
+      setModerationResult(res.data || null);
+      return res.data || null;
+    } catch {
+      setModerationResult(null);
+      return null;
+    } finally {
+      setCheckingModeration(false);
+    }
+  };
+
   const submitPost = async (e) => {
     e.preventDefault();
 
@@ -78,6 +98,16 @@ export default function CreatePost() {
 
     if (!contentToSubmit) {
       setError("Post content is required.");
+      return;
+    }
+
+    const moderation = await checkModeration(contentToSubmit);
+
+    if (moderation?.is_toxic) {
+      setError(
+        moderation.message ||
+          "This post is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."
+      );
       return;
     }
 
@@ -105,6 +135,7 @@ export default function CreatePost() {
       setSelectedFile(null);
       setUploadedMediaUrl("");
       setUploadedMediaType("");
+      setModerationResult(null);
     } catch {
       setError("Failed to create post.");
     } finally {
@@ -135,7 +166,11 @@ export default function CreatePost() {
                   rows="8"
                   placeholder="Share your workout, progress, or thoughts..."
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    setModerationResult(null);
+                    setError("");
+                  }}
                 />
               </div>
 
@@ -151,7 +186,11 @@ export default function CreatePost() {
                   rows="6"
                   placeholder="Use the AI suggestion here or manually refine your final version..."
                   value={finalContent}
-                  onChange={(e) => setFinalContent(e.target.value)}
+                  onChange={(e) => {
+                    setFinalContent(e.target.value);
+                    setModerationResult(null);
+                    setError("");
+                  }}
                 />
               </div>
 
@@ -161,6 +200,30 @@ export default function CreatePost() {
                   Otherwise, the original post content will be saved.
                 </p>
               </div>
+
+              {moderationResult?.is_toxic ? (
+                <div className="rewrite-reason-box">
+                  <p className="rewrite-reason-label">Posting blocked</p>
+                  <p className="rewrite-reason-text">
+                    {moderationResult.message ||
+                      "This post is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."}
+                  </p>
+
+                  <div className="rewrite-meta-row">
+                    {moderationResult.primary_emotion ? (
+                      <span className="tag-pill">
+                        Emotion: {moderationResult.primary_emotion}
+                      </span>
+                    ) : null}
+
+                    {moderationResult.toxicity_label ? (
+                      <span className="tag-pill">
+                        Tone: {moderationResult.toxicity_label}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="field">
                 <label>Tags (comma separated)</label>
@@ -245,9 +308,13 @@ export default function CreatePost() {
             <button
               className="btn btn-primary create-post-submit-btn"
               type="submit"
-              disabled={loading}
+              disabled={loading || checkingModeration}
             >
-              {loading ? "Posting..." : "Create Post"}
+              {checkingModeration
+                ? "Checking..."
+                : loading
+                ? "Posting..."
+                : "Create Post"}
             </button>
           </div>
         </form>

@@ -33,7 +33,7 @@ export default function CustomSelect({
         onClick={() => setOpen((prev) => !prev)}
       >
         <span>{selected?.label || placeholder}</span>
-        <span className={`custom-select-arrow ${open ? "rotate" : ""}`}>⌄</span>
+        <span className={`custom-select-arrow ${open ? "rotate" : ""}`}> v</span>
       </button>
 
       {open ? (

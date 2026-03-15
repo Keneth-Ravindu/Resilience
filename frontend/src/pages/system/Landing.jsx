@@ -21,11 +21,11 @@ export default function Landing() {
                     <img src={logo} alt="Resilience Logo" className="landing-logo" />
                 </div>
 
-                <p className="landing-eyebrow">Final Year Computer Science Project</p>
+                {/* <p className="landing-eyebrow">Final Year Computer Science Project</p> */}
                 <h1 className="landing-title">Resilience</h1>
                 <p className="landing-subtitle">
-                    A platform for emotional insight, toxicity detection, rewrite support,
-                    mentorship, and mental trend analytics.
+                    Physical and mental fitness plaform for evryone to
+                    build emotional resilience and foster a supportive community.
                 </p>
 
                 <div className="landing-actions">
@@ -36,7 +36,7 @@ export default function Landing() {
                         Create Account
                     </Link>
                 </div>
-
+                <br></br><br></br>
                 <div className="landing-feature-grid">
                     <div className="glass-card landing-feature-card">
                         <h3>NLP Insights</h3>

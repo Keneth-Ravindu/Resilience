@@ -269,6 +269,8 @@ function CommentSection({ postId }) {
   const [loadingComments, setLoadingComments] = useState(true);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
+  const [moderationResult, setModerationResult] = useState(null);
+  const [checkingModeration, setCheckingModeration] = useState(false);
 
   const loadComments = async () => {
     try {
@@ -296,11 +298,39 @@ function CommentSection({ postId }) {
     setFinalContent("");
   }
 
+  async function checkModeration(textToCheck) {
+    try {
+      setCheckingModeration(true);
+
+      const res = await api.post("/moderation/check-text", {
+        text: textToCheck,
+      });
+
+      setModerationResult(res.data || null);
+      return res.data || null;
+    } catch {
+      setModerationResult(null);
+      return null;
+    } finally {
+      setCheckingModeration(false);
+    }
+  }
+
   const submitComment = async (e) => {
     e.preventDefault();
 
     const contentToSubmit = (finalContent || content).trim();
     if (!contentToSubmit) return;
+
+    const moderation = await checkModeration(contentToSubmit);
+
+    if (moderation?.is_toxic) {
+      setError(
+        moderation.message ||
+          "This comment is too harsh or toxic. Please rewrite it in a more respectful way."
+      );
+      return;
+    }
 
     try {
       setPosting(true);
@@ -385,12 +415,16 @@ function CommentSection({ postId }) {
         onSubmit={submitComment}
         className="comment-form modern-comment-form"
       >
-        <textarea
-          rows="2"
-          placeholder="Write a supportive comment..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
+      <textarea
+        rows="2"
+        placeholder="Write a supportive comment..."
+        value={content}
+        onChange={(e) => {
+          setContent(e.target.value);
+          setModerationResult(null);
+          setError("");
+        }}
+      />
 
         <RewriteAssistBox
           text={content}
@@ -403,15 +437,48 @@ function CommentSection({ postId }) {
           rows="3"
           placeholder="Manual / final comment version..."
           value={finalContent}
-          onChange={(e) => setFinalContent(e.target.value)}
+          onChange={(e) => {
+            setFinalContent(e.target.value);
+            setModerationResult(null);
+            setError("");
+          }}
         />
 
-        <button
-          className="btn btn-primary btn-sm"
-          type="submit"
-          disabled={posting}
-        >
-          {posting ? "Posting..." : "Comment"}
+        {moderationResult?.is_toxic ? (
+          <div className="rewrite-reason-box">
+            <p className="rewrite-reason-label">Comment blocked</p>
+
+            <p className="rewrite-reason-text">
+              {moderationResult.message ||
+                "This comment is too harsh or toxic. Please rewrite it respectfully."}
+            </p>
+
+            <div className="rewrite-meta-row">
+              {moderationResult.primary_emotion ? (
+                <span className="tag-pill">
+                  Emotion: {moderationResult.primary_emotion}
+                </span>
+              ) : null}
+
+              {moderationResult.toxicity_label ? (
+                <span className="tag-pill">
+                  Tone: {moderationResult.toxicity_label}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+          <button
+            className="btn btn-primary btn-sm"
+            type="submit"
+            disabled={posting || checkingModeration}
+          >
+          {checkingModeration
+            ? "Checking..."
+            : posting
+            ? "Posting..."
+            : "Comment"}
         </button>
       </form>
 

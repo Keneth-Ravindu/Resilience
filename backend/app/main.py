@@ -18,6 +18,7 @@ from app.api.mentors import router as mentors_router
 from app.api.users import router as users_router
 from app.api.friend_requests import router as friend_requests_router
 from app.api.reactions import router as reactions_router
+from app.api.moderation import router as moderation_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -63,6 +64,7 @@ app.include_router(comments_router)
 app.include_router(mentors_router)
 app.include_router(friend_requests_router)
 app.include_router(reactions_router)
+app.include_router(moderation_router)
 
 
 

@@ -562,7 +562,7 @@ def mood_dashboard(
     }
 
 # ---------------------------------------------------
-# 🧠 MOOD DASHBOARD (separate for post vs journal)
+# MOOD DASHBOARD (separate for post vs journal)
 # ---------------------------------------------------
 @router.get("/mood/dashboard/by-type")
 def mood_dashboard_by_type(

@@ -118,7 +118,7 @@ export default function Navbar() {
         <img src={logo} alt="Resilience Logo" className="navbar-logo" />
         <div>
           <h1 className="brand-title">Resilience</h1>
-          <p className="brand-subtitle">emotion intelligence platform</p>
+          {/* <p className="brand-subtitle">emotion intelligence platform</p> */}
         </div>
       </div>
 
@@ -127,7 +127,7 @@ export default function Navbar() {
           <input
             type="text"
             className="navbar-search-input"
-            placeholder="Search members..."
+            placeholder="Search Users"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);

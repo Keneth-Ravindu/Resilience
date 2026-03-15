@@ -84,6 +84,80 @@ def _build_rewrite_reason(
         f"(toxicity score: {score:.2f}). "
         "A more respectful alternative was automatically suggested."
     )
+    
+def analyze_text_preview(text: str) -> dict:
+    """
+    Analyze text without storing it in the database.
+    Used for pre-submit moderation checks in the frontend.
+    """
+
+    cleaned = (text or "").strip()
+
+    if not cleaned:
+        return {
+            "is_toxic": False,
+            "toxicity_score": None,
+            "toxicity_label": None,
+            "primary_emotion": None,
+            "tone": None,
+            "rewrite_suggestion": None,
+            "rewrite_reason": None,
+            "rewrite_model": None,
+            "message": None,
+        }
+
+    nlp_result = analyze_text(
+        NLPAnalyzeRequest(text=cleaned, object_type="preview", object_id=0)
+    )
+
+    threshold = float(getattr(settings, "TOXICITY_REWRITE_THRESHOLD", 0.65))
+    should_rewrite = _should_auto_rewrite(
+        nlp_result.toxicity_label,
+        nlp_result.toxicity_score,
+    )
+    skip_rewrite = _should_skip_rewrite(cleaned)
+
+    rewrite_suggestion = None
+    rewrite_reason = None
+    rewrite_model = None
+
+    if not skip_rewrite and should_rewrite:
+        try:
+            rewrite_result = rewrite_text(cleaned)
+
+            rewrite_suggestion = rewrite_result.get("rewrite_suggestion")
+            rewrite_reason = rewrite_result.get("rewrite_reason")
+            rewrite_model = rewrite_result.get("rewrite_model")
+
+            if not rewrite_reason:
+                rewrite_reason = _build_rewrite_reason(
+                    toxicity_label=nlp_result.toxicity_label,
+                    toxicity_score=nlp_result.toxicity_score,
+                    threshold=threshold,
+                )
+        except Exception as e:
+            logger.exception("PREVIEW REWRITE FAILED error=%s", str(e))
+
+    is_toxic = bool(should_rewrite)
+
+    message = None
+    if is_toxic:
+        message = (
+            "This text is too harsh or toxic. Please use the rewrite suggestion "
+            "or rewrite it in a more respectful way before posting."
+        )
+
+    return {
+        "is_toxic": is_toxic,
+        "toxicity_score": nlp_result.toxicity_score,
+        "toxicity_label": nlp_result.toxicity_label,
+        "primary_emotion": nlp_result.primary_emotion,
+        "tone": nlp_result.tone,
+        "rewrite_suggestion": rewrite_suggestion,
+        "rewrite_reason": rewrite_reason,
+        "rewrite_model": rewrite_model,
+        "message": message,
+    }    
 
 
 def analyze_and_store_text(

@@ -71,7 +71,7 @@ export default function Login() {
                     </div>
                     <div className="field">
                     <CustomSelect
-                        label="Role (temporary frontend selector)"
+                        label="Role"
                         value={role}
                         onChange={setRole}
                         options={[
@@ -86,7 +86,7 @@ export default function Login() {
                         Login
                     </button>
                 </form>
-
+                        
                 {err ? <p className="error-text">{err}</p> : null}
 
                 <p className="auth-footer">

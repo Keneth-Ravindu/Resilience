@@ -13,6 +13,8 @@ export default function CreateJournal() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [moderationResult, setModerationResult] = useState(null);
+  const [checkingModeration, setCheckingModeration] = useState(false);
 
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
@@ -21,6 +23,24 @@ export default function CreateJournal() {
     setFinalContent("");
   }
 
+  async function checkModeration(textToCheck) {
+    try {
+      setCheckingModeration(true);
+
+      const res = await api.post("/moderation/check-text", {
+        text: textToCheck,
+      });
+
+      setModerationResult(res.data || null);
+      return res.data || null;
+    } catch {
+      setModerationResult(null);
+      return null;
+    } finally {
+      setCheckingModeration(false);
+    }
+  }  
+
   async function submitJournal(e) {
     e.preventDefault();
 
@@ -28,6 +48,16 @@ export default function CreateJournal() {
 
     if (!contentToSubmit) {
       setError("Journal content is required.");
+      return;
+    }
+
+    const moderation = await checkModeration(contentToSubmit);
+
+    if (moderation?.is_toxic) {
+      setError(
+        moderation.message ||
+          "This journal is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."
+      );
       return;
     }
 
@@ -51,6 +81,7 @@ export default function CreateJournal() {
       setContent("");
       setFinalContent("");
       setVisibility("private");
+      setModerationResult(null);
     } catch {
       setError("Failed to create journal.");
     } finally {
@@ -110,7 +141,11 @@ export default function CreateJournal() {
                   rows="10"
                   placeholder="Write your journal entry..."
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    setModerationResult(null);
+                    setError("");
+                  }}
                 />
               </div>
 
@@ -126,7 +161,11 @@ export default function CreateJournal() {
                   rows="8"
                   placeholder="Use the AI suggestion here or manually refine your final version..."
                   value={finalContent}
-                  onChange={(e) => setFinalContent(e.target.value)}
+                  onChange={(e) => {
+                    setFinalContent(e.target.value);
+                    setModerationResult(null);
+                    setError("");
+                  }}
                 />
               </div>
 
@@ -136,12 +175,43 @@ export default function CreateJournal() {
                   the original journal content will be saved.
                 </p>
               </div>
+              {moderationResult?.is_toxic ? (
+                <div className="rewrite-reason-box">
+                  <p className="rewrite-reason-label">Posting blocked</p>
+                  <p className="rewrite-reason-text">
+                    {moderationResult.message ||
+                      "This journal is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."}
+                  </p>
+
+                  <div className="rewrite-meta-row">
+                    {moderationResult.primary_emotion ? (
+                      <span className="tag-pill">
+                        Emotion: {moderationResult.primary_emotion}
+                      </span>
+                    ) : null}
+
+                    {moderationResult.toxicity_label ? (
+                      <span className="tag-pill">
+                        Tone: {moderationResult.toxicity_label}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
           <div className="create-journal-submit-row">
-            <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Create Journal"}
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={loading || checkingModeration}
+            >
+              {checkingModeration
+                ? "Checking..."
+                : loading
+                ? "Saving..."
+                : "Create Journal"}
             </button>
           </div>
         </form>
