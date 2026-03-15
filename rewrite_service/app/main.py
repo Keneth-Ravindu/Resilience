@@ -4,3 +4,5 @@ from app.api.routes import router
 app = FastAPI(title="rewrite_service")
 
 app.include_router(router)
+
+
