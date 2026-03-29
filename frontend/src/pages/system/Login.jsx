@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../../api/client";
 import { useAuth } from "../../auth/useAuth";
 import logo from "../../assets/logo.png";
-import CustomSelect from "../../components/CustomSelect";
+
 
 
 export default function Login() {
@@ -13,7 +13,6 @@ export default function Login() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("user");
     const [err, setErr] = useState("");
 
     const submit = async (e) => {
@@ -31,8 +30,18 @@ export default function Login() {
                 },
             });
 
-            login({ access_token: res.data.access_token, role });
-            nav(loc.state?.from || "/", { replace: true });
+            login({
+                access_token: res.data.access_token,
+                role: res.data.role,
+            });
+
+            if (res.data.role === "mentor") {
+                nav("/mentor", { replace: true });
+            } else if (res.data.role === "admin") {
+                nav("/admin", { replace: true });
+            } else {
+                nav("/app", { replace: true });
+            }
         }   catch {
             setErr("Login failed");
         }
@@ -54,7 +63,7 @@ export default function Login() {
                         <label>Email</label>
                         <input
                         type="text"
-                        placeholder="mentor@gmail.com"
+                        placeholder="Enter your email"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         />
@@ -69,19 +78,6 @@ export default function Login() {
                         onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <div className="field">
-                    <CustomSelect
-                        label="Role"
-                        value={role}
-                        onChange={setRole}
-                        options={[
-                        { value: "user", label: "user" },
-                        { value: "mentor", label: "mentor" },
-                        { value: "admin", label: "admin" },
-                        ]}
-                    />
-                    </div>
-
                     <button className="btn btn-primary" type="submit">
                         Login
                     </button>

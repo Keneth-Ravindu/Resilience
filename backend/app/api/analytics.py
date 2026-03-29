@@ -11,6 +11,7 @@ from app.db.session import get_db
 from app.models.text_analysis import TextAnalysis
 from app.services.security import get_current_user
 from app.models.user import User
+from app.services.analytics_service import build_user_dashboard
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -1653,3 +1654,68 @@ def stats_emotion_correlation_matrix_by_type(
             "comment": _build_for("comment"),
         },
     }
+    
+@router.get("/dashboard")
+def analytics_dashboard(
+    days: int = Query(30, ge=7, le=365),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return build_user_dashboard(
+        db=db,
+        user_id=user.id,
+        days=days,
+    )
+
+@router.get("/journals/timeline")
+def journal_emotional_timeline(
+    days: int = Query(30, ge=7, le=365),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    since_dt = datetime.utcnow() - timedelta(days=days)
+
+    rows = (
+        db.query(
+            TextAnalysis.created_at,
+            TextAnalysis.primary_emotion,
+            TextAnalysis.tone,
+            TextAnalysis.toxicity_score,
+            TextAnalysis.object_id,
+        )
+        .filter(
+            TextAnalysis.user_id == user.id,
+            TextAnalysis.object_type == "journal",
+            TextAnalysis.created_at >= since_dt,
+        )
+        .order_by(TextAnalysis.created_at.desc())
+        .all()
+    )
+
+    journal_ids = [row.object_id for row in rows if row.object_id is not None]
+
+    title_map = {}
+    if journal_ids:
+        from app.models.journal import JournalEntry
+
+        journal_rows = (
+            db.query(JournalEntry.id, JournalEntry.title)
+            .filter(JournalEntry.id.in_(journal_ids))
+            .all()
+        )
+        title_map = {journal_id: title for journal_id, title in journal_rows}
+
+    timeline = []
+    for created_at, primary_emotion, tone, toxicity_score, object_id in rows:
+        timeline.append(
+            {
+                "day": str(created_at.date()),
+                "journal_id": object_id,
+                "title": title_map.get(object_id),
+                "primary_emotion": primary_emotion,
+                "tone": tone,
+                "toxicity_score": float(toxicity_score) if toxicity_score is not None else None,
+            }
+        )
+
+    return {"timeline": timeline}

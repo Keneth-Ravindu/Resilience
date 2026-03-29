@@ -1894,3 +1894,20 @@ h4,
 .comment-analysis-block {
   margin-top: 10px;
 }
+
+.analytics-heatmap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8px;
+}
+
+.analytics-heatmap-table th,
+.analytics-heatmap-table td {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.analytics-heatmap-table th {
+  text-align: center;
+  opacity: 0.85;
+}

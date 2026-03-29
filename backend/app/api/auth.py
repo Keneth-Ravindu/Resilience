@@ -31,6 +31,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         name=payload.name,
         email=payload.email,
         hashed_password=hash_password(payload.password),
+        role=payload.role,
         display_name=payload.name,
         profile_picture_url=None,
         status_text=None,
@@ -47,7 +48,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(subject=str(user.id))
-    return Token(access_token=token)
+    return Token(access_token=token, role=user.role)
 
 
 @router.post("/login-json", response_model=Token)
@@ -57,4 +58,4 @@ def login_json(payload: LoginJSON, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(subject=str(user.id))
-    return Token(access_token=token)
+    return Token(access_token=token, role=user.role)

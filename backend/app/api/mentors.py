@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.mentorship import Mentorship
 from app.models.text_analysis import TextAnalysis
 from app.services.security import get_current_user
+from app.services.analytics_service import build_mentor_overview
 
 from app.schemas.mentor import (
     MentorshipOut,
@@ -535,3 +536,15 @@ def mentee_analytics(
         }
 
     return resp
+
+@router.get("/dashboard/overview")
+def mentor_dashboard_overview(
+    days: int = Query(30, ge=7, le=365),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return build_mentor_overview(
+        db=db,
+        mentor_user_id=user.id,
+        days=days,
+    )

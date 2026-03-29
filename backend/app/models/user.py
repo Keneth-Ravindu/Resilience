@@ -21,6 +21,7 @@ class User(Base):
     )
 
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default="user", index=True)
 
     # Social profile fields
     display_name: Mapped[str | None] = mapped_column(

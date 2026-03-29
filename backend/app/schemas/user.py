@@ -8,6 +8,7 @@ class UserCreate(BaseModel):
     confirm_password: str
     age_range: str | None = None
     fitness_level: str | None = None
+    role: str = "user"
 
 
 class UserOut(BaseModel):
@@ -19,6 +20,7 @@ class UserOut(BaseModel):
     status_text: str | None = None
     age_range: str | None = None
     fitness_level: str | None = None
+    role: str
 
     class Config:
         from_attributes = True

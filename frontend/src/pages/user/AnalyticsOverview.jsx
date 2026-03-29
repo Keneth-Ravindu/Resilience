@@ -8,6 +8,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  BarChart,
+  Bar,
 } from "recharts";
 
 const EMOTION_COLORS = {
@@ -210,10 +212,49 @@ function TypeOverviewCard({ label, data }) {
   );
 }
 
+function buildHeatmapRows(bundleData) {
+  if (!bundleData?.by_type) return [];
+
+  const allSeries = [
+    bundleData.by_type.post?.series || {},
+    bundleData.by_type.journal?.series || {},
+    bundleData.by_type.comment?.series || {},
+  ];
+
+  const emotionMap = {};
+
+  for (const seriesGroup of allSeries) {
+    for (const [emotion, points] of Object.entries(seriesGroup)) {
+      if (!emotionMap[emotion]) {
+        emotionMap[emotion] = {};
+      }
+
+      points.forEach((point) => {
+        const day = point.day;
+        const value = Number(point.value || 0);
+        emotionMap[emotion][day] = (emotionMap[emotion][day] || 0) + value;
+      });
+    }
+  }
+
+  return Object.entries(emotionMap).map(([emotion, dayMap]) => ({
+    emotion,
+    ...dayMap,
+  }));
+}
+
+function truncateText(text, maxLength = 40) {
+  if (!text) return "Untitled Journal";
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}
+
 export default function AnalyticsOverview() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [toxicityData, setToxicityData] = useState([]);
+  const [journalTimeline, setJournalTimeline] = useState([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -242,11 +283,16 @@ export default function AnalyticsOverview() {
         params.append("include_series", "true");
         params.append("debug", "true");
 
-        const res = await api.get(
-          `/analytics/mood/dashboard/bundle/by-type?${params.toString()}`
-        );
+        const [bundleRes, toxicityRes, journalRes] = await Promise.all([
+          api.get(`/analytics/mood/dashboard/bundle/by-type?${params.toString()}`),
+          api.get("/analytics/toxicity/timeline?days=30"),
+          api.get("/analytics/journals/timeline?days=30"),
+        ]);
 
-        setData(res.data);
+        setData(bundleRes.data);
+        setToxicityData(toxicityRes.data?.points || []);
+        setJournalTimeline(journalRes.data?.timeline || []);
+
       } catch {
         setError("Failed to load analytics overview.");
       } finally {
@@ -260,6 +306,12 @@ export default function AnalyticsOverview() {
   const snapshotPost = data?.by_type?.post;
   const snapshotJournal = data?.by_type?.journal;
   const snapshotComment = data?.by_type?.comment;
+
+  const heatmapRows = buildHeatmapRows(data);
+  const heatmapDays =
+  heatmapRows.length > 0
+    ? Object.keys(heatmapRows[0]).filter((key) => key !== "emotion").slice(-7)
+    : [];
 
   if (loading) {
     return (
@@ -306,6 +358,207 @@ export default function AnalyticsOverview() {
           </div>
         </div>
       </div>
+
+      <section className="glass-card chart-card">
+        <div className="card-head">
+          <div>
+            <h3>Toxicity Trend</h3>
+            <p>Average toxicity score across recent days.</p>
+          </div>
+        </div>
+
+        {toxicityData.length > 0 ? (
+          <div className="chart-wrap">
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={toxicityData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#ef4444"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p>No toxicity trend data available yet.</p>
+        )}
+      </section>
+
+      <section className="glass-card">
+        <div className="section-head">
+          <h3 style={{ marginBottom: "6px" }}>Emotion Heatmap</h3>
+          <p style={{ opacity: 0.7, marginBottom: "10px" }}>
+            Visual intensity of emotions over the last 7 days.
+          </p>
+        </div>
+
+        {heatmapRows.length > 0 && heatmapDays.length > 0 ? (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              className="analytics-heatmap-table"
+              style={{ borderSpacing: "8px" }}
+            >
+              <thead>
+                <tr>
+                  <th>Emotion</th>
+                  {heatmapDays.map((day) => (
+                    <th key={day} style={{ opacity: 0.7 }}>
+                      {day.slice(5)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {heatmapRows
+                  .sort((a, b,) => {
+                    const aTotal = Object.values(a)
+                      .filter((v) => typeof v === "number")
+                      .reduce((sum, v) => sum + v, 0);
+
+                    const bTotal = Object.values(b)
+                      .filter((v) => typeof v === "number")
+                      .reduce((sum, v) => sum + v, 0);
+
+                    return bTotal - aTotal;
+                  })
+                  .slice(0, 6)
+                  .map((row) => (
+                    <tr key={row.emotion}>
+                      <td style={{ fontWeight: 600 }}>{row.emotion}</td>
+
+                      {heatmapDays.map((day) => {
+                        const value = Number(row[day] || 0);
+
+                        const getHeatColor = (v) => {
+                          if (v >= 0.7) return "#ef4444"; // red
+                          if (v >= 0.4) return "#f97316"; // orange
+                          if (v >= 0.2) return "#eab308"; // yellow
+                          if (v >= 0.05) return "#22c55e"; // green
+                          return "#595c61"; // dark
+                        };
+
+                        const color = getHeatColor(value);
+
+                        return (
+                          <td
+                            key={day}
+                            title={`${row.emotion} on ${day}: ${value.toFixed(3)}`}
+                            style={{
+                              background: color,
+                              color: value > 0.2 ? "#000000" : "#000000",
+                              textAlign: "center",
+                              borderRadius: "10px",
+                              padding: "10px",
+                              fontWeight: 600,
+                              minWidth: "42px",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            {value > 0.0001 ? value.toFixed(3) : ""}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+
+            <div
+              style={{
+                marginTop: "12px",
+                display: "flex",
+                gap: "10px",
+                flexWrap: "wrap",
+              }}
+            >
+              <span style={{ background: "#ef4444", padding: "4px 8px", borderRadius: "6px" }}>
+                Strong
+              </span>
+              <span style={{ background: "#f97316", padding: "4px 8px", borderRadius: "6px" }}>
+                Moderate
+              </span>
+              <span style={{ background: "#eab308", padding: "4px 8px", borderRadius: "6px" }}>
+                Mild
+              </span>
+              <span style={{ background: "#22c55e", padding: "4px 8px", borderRadius: "6px" }}>
+                Minimal
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p>No heatmap data available yet.</p>
+        )}
+      </section>
+
+      <section className="glass-card">
+        <div className="section-head">
+          <h3>Journal Emotional Timeline</h3>
+          <p style={{ marginTop: "4px", opacity: 0.8 }}>
+            Recent journal entries with emotional analysis.
+          </p>
+        </div>
+
+        {journalTimeline.length ? (
+          <div className="simple-list">
+            {journalTimeline.slice(0, 6).map((item, index) => {
+              const toxicity =
+                item.toxicity_score != null ? Number(item.toxicity_score) : null;
+
+              let toxicityLabel = "No score";
+              let toxicityClass = "role-badge";
+
+              if (toxicity != null) {
+                if (toxicity >= 0.6) {
+                  toxicityLabel = `High ${toxicity.toFixed(3)}`;
+                  toxicityClass = "trend-badge trend-up";
+                } else if (toxicity >= 0.4) {
+                  toxicityLabel = `Moderate ${toxicity.toFixed(3)}`;
+                  toxicityClass = "trend-badge trend-stable";
+                } else {
+                  toxicityLabel = `Low ${toxicity.toFixed(3)}`;
+                  toxicityClass = "trend-badge trend-down";
+                }
+              }
+
+              return (
+                <div
+                  className="simple-list-item"
+                  key={`${item.journal_id}-${index}`}
+                  style={{ alignItems: "flex-start" }}
+                >
+                  <div style={{ maxWidth: "80%" }}>
+                    <strong>
+                      {item.title && item.title.trim().length > 0
+                        ? truncateText(item.title, 45)
+                        : "Untitled Journal"}
+                    </strong>
+                    <p style={{ marginTop: "6px" }}>
+                      {item.day}
+                    </p>
+                    <p style={{ marginTop: "4px" }}>
+                      Emotion: <strong>{item.primary_emotion || "No data"}</strong> | Tone:{" "}
+                      <strong>{item.tone || "No data"}</strong>
+                    </p>
+                  </div>
+
+                  <span className={toxicityClass}>{toxicityLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p>No journal timeline data available yet.</p>
+        )}
+      </section> 
 
       <section className="glass-card summary-section">
         <div className="section-head">
