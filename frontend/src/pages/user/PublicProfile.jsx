@@ -124,7 +124,8 @@ export default function PublicProfile() {
 
   const [error, setError] = useState("");
   const [friendActionLoading, setFriendActionLoading] = useState(false);
-  const [friendActionState, setFriendActionState] = useState("idle");
+  const [friendActionState, setFriendActionState] = useState("loading");
+  const [friendRequestId, setFriendRequestId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -203,13 +204,80 @@ export default function PublicProfile() {
     };
   }, [userId]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    setFriendActionState("loading");
+    setFriendRequestId(null);
+
+    api
+      .get(`/friend-requests/status/${userId}`)
+      .then((res) => {
+        if (!isMounted) return;
+
+        setFriendActionState(res.data?.status || "none");
+        setFriendRequestId(res.data?.request_id || null);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setFriendActionState("none");
+        setFriendRequestId(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
   async function sendFriendRequest() {
     try {
       setFriendActionLoading(true);
-      await api.post(`/friend-requests/${userId}`);
-      setFriendActionState("sent");
+      setError("");
+
+      const res = await api.post(`/friend-requests/${userId}`);
+      setFriendActionState("pending_sent");
+      setFriendRequestId(res.data?.id || null);
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+
+      if (detail === "Request already sent") {
+        setFriendActionState("pending_sent");
+      } else {
+        setError("Failed to send friend request.");
+      }
+    } finally {
+      setFriendActionLoading(false);
+    }
+  }
+
+  async function acceptFriendRequest() {
+    if (!friendRequestId) return;
+
+    try {
+      setFriendActionLoading(true);
+      setError("");
+
+      await api.post(`/friend-requests/${friendRequestId}/accept`);
+      setFriendActionState("friends");
     } catch {
-      setFriendActionState("sent");
+      setError("Failed to accept friend request.");
+    } finally {
+      setFriendActionLoading(false);
+    }
+  }
+
+  async function rejectFriendRequest() {
+    if (!friendRequestId) return;
+
+    try {
+      setFriendActionLoading(true);
+      setError("");
+
+      await api.post(`/friend-requests/${friendRequestId}/reject`);
+      setFriendActionState("none");
+      setFriendRequestId(null);
+    } catch {
+      setError("Failed to reject friend request.");
     } finally {
       setFriendActionLoading(false);
     }
@@ -256,18 +324,52 @@ export default function PublicProfile() {
           </div>
 
           <div className="public-profile-actions">
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={friendActionLoading || friendActionState === "sent"}
-              onClick={sendFriendRequest}
-            >
-              {friendActionLoading
-                ? "Sending..."
-                : friendActionState === "sent"
-                ? "Request Sent"
-                : "Add Friend"}
-            </button>
+            {friendActionState === "loading" ? (
+              <button type="button" className="btn btn-secondary" disabled>
+                Loading...
+              </button>
+            ) : friendActionState === "self" ? (
+              <button type="button" className="btn btn-secondary" disabled>
+                This is you
+              </button>
+            ) : friendActionState === "friends" ? (
+              <button type="button" className="btn btn-secondary" disabled>
+                Friends
+              </button>
+            ) : friendActionState === "pending_sent" ? (
+              <button type="button" className="btn btn-secondary" disabled>
+                Request Sent
+              </button>
+            ) : friendActionState === "pending_received" ? (
+              <div className="quick-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={acceptFriendRequest}
+                  disabled={friendActionLoading}
+                >
+                  {friendActionLoading ? "Processing..." : "Accept Request"}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={rejectFriendRequest}
+                  disabled={friendActionLoading}
+                >
+                  Reject
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={friendActionLoading}
+                onClick={sendFriendRequest}
+              >
+                {friendActionLoading ? "Sending..." : "Add Friend"}
+              </button>
+            )}
           </div>
         </div>
       </section>

@@ -11,6 +11,7 @@ from app.models.reaction import Reaction
 
 from app.repositories.text_analysis_repo import get_latest_analysis_for_object
 from app.schemas.text_analysis import TextAnalysisOut
+from app.services.text_analysis_service import analyze_text_preview
 
 router = APIRouter(prefix="/journals", tags=["journals"])
 
@@ -32,6 +33,21 @@ def get_reaction_counts(db: Session, object_type: str, object_id: int):
     total = sum(counts.values())
     return counts, total
 
+def _enforce_safe_text(text: str):
+    result = analyze_text_preview(text)
+
+    if result.get("is_toxic") is True:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "This content is too harsh or toxic. Please rewrite it.",
+                "is_toxic": True,
+                "toxicity_label": result.get("toxicity_label"),
+                "primary_emotion": result.get("primary_emotion"),
+            },
+        )
+
+    return result
 
 @router.post("", response_model=JournalOut, status_code=status.HTTP_201_CREATED)
 def create_journal(
@@ -42,7 +58,9 @@ def create_journal(
     visibility = (payload.visibility or "private").strip().lower()
     if visibility not in {"private", "public"}:
         raise HTTPException(status_code=400, detail="visibility must be 'private' or 'public'")
-
+    
+    _enforce_safe_text(payload.content)
+    
     entry = JournalEntry(
         user_id=user.id,
         entry_date=payload.entry_date,

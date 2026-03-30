@@ -14,6 +14,7 @@ from app.services.security import get_current_user
 from app.models.user import User
 from app.services.text_analysis_service import analyze_and_store_text
 from app.repositories.text_analysis_repo import get_latest_analysis_for_object
+from app.services.text_analysis_service import analyze_text_preview
 
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -38,6 +39,22 @@ def _detect_media_type(content_type: str) -> str | None:
     if content_type in ALLOWED_VIDEO_TYPES:
         return "video"
     return None
+
+def _enforce_safe_text(text: str):
+    result = analyze_text_preview(text)
+
+    if result.get("is_toxic") is True:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "This content is too harsh or toxic. Please rewrite it.",
+                "is_toxic": True,
+                "toxicity_label": result.get("toxicity_label"),
+                "primary_emotion": result.get("primary_emotion"),
+            },
+        )
+
+    return result
 
 
 # ---------------------------
@@ -137,6 +154,8 @@ def create_post(
 
     if media_type and not payload.media_url:
         raise HTTPException(status_code=400, detail="media_url is required when media_type is provided")
+    
+    _enforce_safe_text(payload.content)
 
     post = Post(
         user_id=user.id,
@@ -274,6 +293,8 @@ def add_comment(
     post = db.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    
+    _enforce_safe_text(payload.content)
 
     comment = Comment(
         post_id=post_id,

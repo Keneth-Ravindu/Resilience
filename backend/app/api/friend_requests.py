@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_
 
 from app.db.session import get_db
 from app.models.friend_request import FriendRequest
@@ -60,6 +61,69 @@ def get_incoming_requests(
         .all()
     )
 
+@router.get("/status/{user_id}")
+def get_friend_request_status(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if user_id == current_user.id:
+        return {
+            "status": "self",
+            "request_id": None,
+        }
+
+    relation = (
+        db.query(FriendRequest)
+        .filter(
+            or_(
+                and_(
+                    FriendRequest.requester_id == current_user.id,
+                    FriendRequest.receiver_id == user_id,
+                ),
+                and_(
+                    FriendRequest.requester_id == user_id,
+                    FriendRequest.receiver_id == current_user.id,
+                ),
+            )
+        )
+        .order_by(FriendRequest.id.desc())
+        .first()
+    )
+
+    if not relation:
+        return {
+            "status": "none",
+            "request_id": None,
+        }
+
+    if relation.status == "accepted":
+        return {
+            "status": "friends",
+            "request_id": relation.id,
+        }
+
+    if relation.status == "pending":
+        if relation.requester_id == current_user.id:
+            return {
+                "status": "pending_sent",
+                "request_id": relation.id,
+            }
+        return {
+            "status": "pending_received",
+            "request_id": relation.id,
+        }
+
+    if relation.status == "rejected":
+        return {
+            "status": "none",
+            "request_id": relation.id,
+        }
+
+    return {
+        "status": "none",
+        "request_id": relation.id,
+    }
 
 @router.post("/{request_id}/accept")
 def accept_request(

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../api/client";
 
 function normalizeRewriteResponse(data) {
@@ -41,10 +41,14 @@ export default function RewriteAssistBox({
   onUseRewrite,
   compact = false,
   label = "Suggest AI Rewrite",
+  autoTrigger = false,
 }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+
+  // ✅ Prevent multiple auto triggers
+  const lastTriggeredTextRef = useRef("");
 
   async function handleRewrite() {
     const trimmed = text.trim();
@@ -78,6 +82,32 @@ export default function RewriteAssistBox({
       setLoading(false);
     }
   }
+
+  // Reset suggestion when text changes manually
+  useEffect(() => {
+    if (!text) return;
+
+    // If user edits text after suggestion → clear old result
+    if (result && text !== lastTriggeredTextRef.current) {
+      setResult(null);
+    }
+  }, [text]);
+
+  // Auto-trigger logic (smart + safe)
+  useEffect(() => {
+    if (!autoTrigger) return;
+
+    const trimmed = text?.trim();
+    if (!trimmed || trimmed.length < 10) return;
+
+    // Prevent repeated triggers for same text
+    if (lastTriggeredTextRef.current === trimmed) return;
+
+    if (!loading) {
+      lastTriggeredTextRef.current = trimmed;
+      handleRewrite();
+    }
+  }, [autoTrigger, text]);
 
   const rewriteSuggestion = result?.rewrite_suggestion || "";
   const rewriteReason = result?.rewrite_reason || "";

@@ -19,8 +19,8 @@ export default function CreateJournal() {
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
 
-    setContent(rewriteText);
-    setFinalContent("");
+    setFinalContent(rewriteText);
+    setError("");
   }
 
   async function checkModeration(textToCheck) {
@@ -43,6 +43,7 @@ export default function CreateJournal() {
 
   async function submitJournal(e) {
     e.preventDefault();
+    setModerationResult(null);
 
     const contentToSubmit = (finalContent || content).trim();
 
@@ -82,8 +83,24 @@ export default function CreateJournal() {
       setFinalContent("");
       setVisibility("private");
       setModerationResult(null);
-    } catch {
-      setError("Failed to create journal.");
+      } catch (err) {
+      const backendError = err?.response?.data?.detail;
+
+      if (backendError?.is_toxic) {
+        setModerationResult({
+          is_toxic: true,
+          message: backendError.message,
+          toxicity_label: backendError.toxicity_label,
+          primary_emotion: backendError.primary_emotion,
+        });
+
+        setError(
+          backendError.message ||
+            "This journal is too harsh or toxic. Please rewrite it."
+        );
+      } else {
+        setError("Failed to create journal.");
+      }
     } finally {
       setLoading(false);
     }
@@ -153,6 +170,7 @@ export default function CreateJournal() {
                 text={content}
                 onUseRewrite={handleUseRewrite}
                 label="Journal AI Rewrite"
+                autoTrigger={moderationResult?.is_toxic}
               />
 
               <div className="field">

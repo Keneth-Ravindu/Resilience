@@ -294,8 +294,8 @@ function CommentSection({ postId }) {
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
 
-    setContent(rewriteText);
-    setFinalContent("");
+    setFinalContent(rewriteText);
+    setError("");
   }
 
   async function checkModeration(textToCheck) {
@@ -318,6 +318,7 @@ function CommentSection({ postId }) {
 
   const submitComment = async (e) => {
     e.preventDefault();
+    setModerationResult(null);
 
     const contentToSubmit = (finalContent || content).trim();
     if (!contentToSubmit) return;
@@ -342,9 +343,26 @@ function CommentSection({ postId }) {
 
       setContent("");
       setFinalContent("");
+      setModerationResult(null);
       await loadComments();
-    } catch {
-      setError("Failed to post comment.");
+    } catch (err) {
+      const backendError = err?.response?.data?.detail;
+
+      if (backendError?.is_toxic) {
+        setModerationResult({
+          is_toxic: true,
+          message: backendError.message,
+          toxicity_label: backendError.toxicity_label,
+          primary_emotion: backendError.primary_emotion,
+        });
+
+        setError(
+          backendError.message ||
+            "This comment is too harsh or toxic. Please rewrite it."
+        );
+      } else {
+        setError("Failed to post comment.");
+      }
     } finally {
       setPosting(false);
     }
@@ -431,6 +449,7 @@ function CommentSection({ postId }) {
           onUseRewrite={handleUseRewrite}
           label="Comment AI Rewrite"
           compact
+          autoTrigger={moderationResult?.is_toxic}
         />
 
         <textarea
