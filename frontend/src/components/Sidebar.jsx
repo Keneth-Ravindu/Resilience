@@ -9,42 +9,49 @@ export default function Sidebar() {
       <div className="sidebar-section">
         <p className="sidebar-label">Navigation</p>
 
-        {role === "user" && (
+      {role === "user" && (
         <>
-            <NavLink className="nav-link" to="/app" end>
+          <NavLink className="nav-link" to="/app" end>
             Dashboard
-            </NavLink>
+          </NavLink>
 
-            <NavLink className="nav-link" to="/app/feed">
+          <NavLink className="nav-link" to="/app/feed">
             Feed
-            </NavLink>
+          </NavLink>
 
-            {/* NEW */}
-            <NavLink className="nav-link" to="/app/me">
+          <NavLink className="nav-link" to="/app/me">
             My Profile
-            </NavLink>
+          </NavLink>
 
-            <NavLink className="nav-link" to="/app/posts/new">
+          <NavLink className="nav-link" to="/app/posts/new">
             Create Post
-            </NavLink>
+          </NavLink>
 
-            <NavLink className="nav-link" to="/app/journals" end>
+          <NavLink className="nav-link" to="/app/journals" end>
             Journals
-            </NavLink>
+          </NavLink>
 
-            <NavLink className="nav-link" to="/app/journals/new">
+          <NavLink className="nav-link" to="/app/journals/new">
             Create Journal
-            </NavLink>
+          </NavLink>
 
-            <NavLink className="nav-link" to="/app/analytics">
+          <NavLink className="nav-link" to="/app/analytics">
             Analytics
-            </NavLink>
+          </NavLink>
 
-            <NavLink className="nav-link" to="/app/settings">
+          <NavLink className="nav-link" to="/app/search">
+            Search
+          </NavLink>
+
+          <NavLink className="nav-link" to="/app/friend-requests">
+            Friend Requests
+          </NavLink>
+
+          <NavLink className="nav-link" to="/app/settings">
             Settings
-            </NavLink>
+          </NavLink>
         </>
-        )}
+      )}
 
         {role === "mentor" && (
           <>

@@ -21,6 +21,7 @@ export default function UserSearch() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState("");
+  const [friendStates, setFriendStates] = useState({});
 
   async function handleSearch(e) {
     e.preventDefault();
@@ -28,22 +29,119 @@ export default function UserSearch() {
     const trimmed = query.trim();
     if (!trimmed) {
       setResults([]);
+      setFriendStates({});
       setSearched(false);
+      setError("");
       return;
     }
 
     try {
       setLoading(true);
       setError("");
+
       const res = await api.get(`/users/search?q=${encodeURIComponent(trimmed)}`);
-      setResults(res.data || []);
+      const users = res.data || [];
+
+      setResults(users);
       setSearched(true);
+
+      const statusEntries = await Promise.all(
+        users.map(async (user) => {
+          try {
+            const statusRes = await api.get(`/friend-requests/status/${user.id}`);
+            return [
+              user.id,
+              {
+                status: statusRes.data?.status || "none",
+                request_id: statusRes.data?.request_id || null,
+              },
+            ];
+          } catch {
+            return [
+              user.id,
+              {
+                status: "none",
+                request_id: null,
+              },
+            ];
+          }
+        })
+      );
+
+      setFriendStates(Object.fromEntries(statusEntries));
     } catch {
       setError("Failed to search users.");
       setResults([]);
+      setFriendStates({});
       setSearched(true);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sendFriendRequest(userId) {
+    try {
+      setError("");
+
+      const res = await api.post(`/friend-requests/${userId}`);
+
+      setFriendStates((prev) => ({
+        ...prev,
+        [userId]: {
+          status: "pending_sent",
+          request_id: res.data?.id || prev[userId]?.request_id || null,
+        },
+      }));
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      if (detail === "Request already sent") {
+        setFriendStates((prev) => ({
+          ...prev,
+          [userId]: {
+            ...(prev[userId] || {}),
+            status: "pending_sent",
+          },
+        }));
+      } else {
+        setError("Failed to send friend request.");
+      }
+    }
+  }
+
+  async function acceptFriendRequest(userId, requestId) {
+    try {
+      setError("");
+
+      await api.post(`/friend-requests/${requestId}/accept`);
+
+      setFriendStates((prev) => ({
+        ...prev,
+        [userId]: {
+          ...(prev[userId] || {}),
+          status: "friends",
+          request_id: requestId,
+        },
+      }));
+    } catch {
+      setError("Failed to accept friend request.");
+    }
+  }
+
+  async function rejectFriendRequest(userId, requestId) {
+    try {
+      setError("");
+
+      await api.post(`/friend-requests/${requestId}/reject`);
+
+      setFriendStates((prev) => ({
+        ...prev,
+        [userId]: {
+          status: "none",
+          request_id: null,
+        },
+      }));
+    } catch {
+      setError("Failed to reject friend request.");
     }
   }
 
@@ -81,35 +179,90 @@ export default function UserSearch() {
           <div className="user-search-results">
             {results.map((user) => {
               const displayName = getDisplayName(user);
+              const relation = friendStates[user.id] || {
+                status: "none",
+                request_id: null,
+              };
 
               return (
-                <Link
-                  key={user.id}
-                  to={`/app/profile/${user.id}`}
-                  className="user-search-result-card"
-                >
-                  {user.profile_picture_url ? (
-                    <img
-                      src={resolveMediaUrl(user.profile_picture_url)}
-                      alt={displayName}
-                      className="user-search-avatar"
-                    />
-                  ) : (
-                    <div className="user-search-avatar user-search-avatar-fallback">
-                      {displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                <div key={user.id} className="user-search-result-card">
+                  <Link
+                    to={`/app/profile/${user.id}`}
+                    className="feed-author-link"
+                    style={{ display: "flex", gap: "14px", flex: 1 }}
+                  >
+                    {user.profile_picture_url ? (
+                      <img
+                        src={resolveMediaUrl(user.profile_picture_url)}
+                        alt={displayName}
+                        className="user-search-avatar"
+                      />
+                    ) : (
+                      <div className="user-search-avatar user-search-avatar-fallback">
+                        {displayName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
 
-                  <div className="user-search-result-content">
-                    <h3>{displayName}</h3>
-                    <p>{user.status_text || "No status added yet."}</p>
+                    <div className="user-search-result-content">
+                      <h3>{displayName}</h3>
+                      <p>{user.status_text || "No status added yet."}</p>
 
-                    <div className="user-search-tags">
-                      {user.age_range ? <span className="tag-pill">{user.age_range}</span> : null}
-                      {user.fitness_level ? <span className="tag-pill">{user.fitness_level}</span> : null}
+                      <div className="user-search-tags">
+                        {user.age_range ? (
+                          <span className="tag-pill">{user.age_range}</span>
+                        ) : null}
+                        {user.fitness_level ? (
+                          <span className="tag-pill">{user.fitness_level}</span>
+                        ) : null}
+                      </div>
                     </div>
+                  </Link>
+
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {relation.status === "self" ? (
+                      <button type="button" className="btn btn-secondary btn-sm" disabled>
+                        You
+                      </button>
+                    ) : relation.status === "friends" ? (
+                      <button type="button" className="btn btn-secondary btn-sm" disabled>
+                        Friends
+                      </button>
+                    ) : relation.status === "pending_sent" ? (
+                      <button type="button" className="btn btn-secondary btn-sm" disabled>
+                        Request Sent
+                      </button>
+                    ) : relation.status === "pending_received" ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() =>
+                            acceptFriendRequest(user.id, relation.request_id)
+                          }
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() =>
+                            rejectFriendRequest(user.id, relation.request_id)
+                          }
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => sendFriendRequest(user.id)}
+                      >
+                        Add Friend
+                      </button>
+                    )}
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>

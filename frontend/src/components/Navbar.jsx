@@ -25,8 +25,8 @@ export default function Navbar() {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [sendingRequestId, setSendingRequestId] = useState(null);
-  const [sentRequestIds, setSentRequestIds] = useState([]);
+  const [friendStates, setFriendStates] = useState({});
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
   const searchBoxRef = useRef(null);
   const debounceRef = useRef(null);
@@ -77,10 +77,35 @@ export default function Navbar() {
 
       api
         .get(`/users/search?q=${encodeURIComponent(trimmed)}`)
-        .then((res) => {
+        .then(async (res) => {
           const filtered = (res.data || []).filter((item) => item.id !== user?.id);
           setResults(filtered);
           setShowDropdown(true);
+
+          const statusEntries = await Promise.all(
+            filtered.map(async (item) => {
+              try {
+                const statusRes = await api.get(`/friend-requests/status/${item.id}`);
+                return [
+                  item.id,
+                  {
+                    status: statusRes.data?.status || "none",
+                    request_id: statusRes.data?.request_id || null,
+                  },
+                ];
+              } catch {
+                return [
+                  item.id,
+                  {
+                    status: "none",
+                    request_id: null,
+                  },
+                ];
+              }
+            })
+          );
+
+          setFriendStates(Object.fromEntries(statusEntries));
         })
         .catch(() => {
           setResults([]);
@@ -100,13 +125,73 @@ export default function Navbar() {
 
   async function sendFriendRequest(targetUserId) {
     try {
-      setSendingRequestId(targetUserId);
-      await api.post(`/friend-requests/${targetUserId}`);
-      setSentRequestIds((prev) => [...new Set([...prev, targetUserId])]);
+      setActionLoadingId(targetUserId);
+
+      const res = await api.post(`/friend-requests/${targetUserId}`);
+
+      setFriendStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          status: "pending_sent",
+          request_id: res.data?.id || prev[targetUserId]?.request_id || null,
+        },
+      }));
     } catch (err) {
-      console.error("Failed to send friend request", err);
+      const detail = err?.response?.data?.detail;
+
+      if (detail === "Request already sent") {
+        setFriendStates((prev) => ({
+          ...prev,
+          [targetUserId]: {
+            ...(prev[targetUserId] || {}),
+            status: "pending_sent",
+          },
+        }));
+      } else {
+        console.error("Failed to send friend request", err);
+      }
     } finally {
-      setSendingRequestId(null);
+      setActionLoadingId(null);
+    }
+  }
+
+  async function acceptFriendRequest(targetUserId, requestId) {
+    try {
+      setActionLoadingId(targetUserId);
+
+      await api.post(`/friend-requests/${requestId}/accept`);
+
+      setFriendStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          status: "friends",
+          request_id: requestId,
+        },
+      }));
+    } catch (err) {
+      console.error("Failed to accept friend request", err);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  async function rejectFriendRequest(targetUserId, requestId) {
+    try {
+      setActionLoadingId(targetUserId);
+
+      await api.post(`/friend-requests/${requestId}/reject`);
+
+      setFriendStates((prev) => ({
+        ...prev,
+        [targetUserId]: {
+          status: "none",
+          request_id: null,
+        },
+      }));
+    } catch (err) {
+      console.error("Failed to reject friend request", err);
+    } finally {
+      setActionLoadingId(null);
     }
   }
 
@@ -148,8 +233,11 @@ export default function Navbar() {
                 <div className="navbar-search-results">
                   {results.map((result) => {
                     const resultName = getDisplayName(result);
-                    const isSent = sentRequestIds.includes(result.id);
-                    const isSending = sendingRequestId === result.id;
+                    const relation = friendStates[result.id] || {
+                      status: "none",
+                      request_id: null,
+                    };
+                    const isLoading = actionLoadingId === result.id;
 
                     return (
                       <div key={result.id} className="navbar-search-result-card">
@@ -181,14 +269,56 @@ export default function Navbar() {
                           </div>
                         </Link>
 
-                        <button
-                          type="button"
-                          className="btn btn-primary btn-sm navbar-request-btn"
-                          disabled={isSent || isSending}
-                          onClick={() => sendFriendRequest(result.id)}
-                        >
-                          {isSending ? "Sending..." : isSent ? "Request Sent" : "Add Friend"}
-                        </button>
+                        {relation.status === "friends" ? (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm navbar-request-btn"
+                            disabled
+                          >
+                            Friends
+                          </button>
+                        ) : relation.status === "pending_sent" ? (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm navbar-request-btn"
+                            disabled
+                          >
+                            Request Sent
+                          </button>
+                        ) : relation.status === "pending_received" ? (
+                          <div className="quick-actions">
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm navbar-request-btn"
+                              disabled={isLoading}
+                              onClick={() =>
+                                acceptFriendRequest(result.id, relation.request_id)
+                              }
+                            >
+                              {isLoading ? "..." : "Accept"}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm navbar-request-btn"
+                              disabled={isLoading}
+                              onClick={() =>
+                                rejectFriendRequest(result.id, relation.request_id)
+                              }
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm navbar-request-btn"
+                            disabled={isLoading}
+                            onClick={() => sendFriendRequest(result.id)}
+                          >
+                            {isLoading ? "Sending..." : "Add Friend"}
+                          </button>
+                        )}
                       </div>
                     );
                   })}

@@ -29,6 +29,7 @@ import Journals from "../pages/user/Journals";
 import CreateJournal from "../pages/user/CreateJournal";
 
 import MyProfile from "../pages/user/MyProfile";
+import FriendRequests from "../pages/user/FriendRequests";
 
 export default function AppRoutes() {
     return (
@@ -51,6 +52,7 @@ export default function AppRoutes() {
                         <Route path="/app/settings" element={<Settings />} />
                         <Route path="/app/profile/:userId" element={<PublicProfile />} />
                         <Route path="/app/search" element={<UserSearch />} />
+                        <Route path="/app/friend-requests" element={<FriendRequests />} />
                     </Route>
 
                     <Route element={<RequireRole allow={["mentor"]} />}>
