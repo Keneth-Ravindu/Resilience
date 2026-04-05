@@ -6,15 +6,18 @@ export default function Requests() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   const loadRequests = async () => {
     try {
       setError("");
       setLoading(true);
+
       const res = await api.get("/mentors/requests/pending/detailed");
       setRequests(res.data || []);
     } catch {
       setError("Failed to load mentor requests.");
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -27,7 +30,11 @@ export default function Requests() {
   const handleAccept = async (menteeUserId) => {
     try {
       setBusyId(menteeUserId);
+      setError("");
+      setMessage("");
+
       await api.post(`/mentors/accept?mentee_user_id=${menteeUserId}`);
+      setMessage("Mentorship request accepted.");
       await loadRequests();
     } catch {
       setError("Failed to accept request.");
@@ -39,7 +46,11 @@ export default function Requests() {
   const handleReject = async (menteeUserId) => {
     try {
       setBusyId(menteeUserId);
+      setError("");
+      setMessage("");
+
       await api.post(`/mentors/reject?mentee_user_id=${menteeUserId}`);
+      setMessage("Mentorship request rejected.");
       await loadRequests();
     } catch {
       setError("Failed to reject request.");
@@ -50,8 +61,24 @@ export default function Requests() {
 
   return (
     <div className="fade-in">
-      <h2 className="page-title">Mentor Requests</h2>
+      <div className="dashboard-head">
+        <div>
+          <h2 className="page-title">Mentor Requests</h2>
+          <p className="page-subtitle">
+            Review pending mentorship requests and decide who to accept.
+          </p>
+        </div>
+      </div>
 
+      <div className="stats-grid">
+        <section className="glass-card stat-card">
+          <p className="stat-label">Pending Requests</p>
+          <h3 className="stat-value">{requests.length}</h3>
+          <p className="stat-text">Requests currently waiting for your response.</p>
+        </section>
+      </div>
+
+      {message ? <p className="success-text">{message}</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
 
       {loading ? (
@@ -64,28 +91,32 @@ export default function Requests() {
           <p>You do not have any pending mentorship requests right now.</p>
         </section>
       ) : (
-        <div className="card-grid">
+        <div className="summary-grid">
           {requests.map((req) => (
-            <section className="glass-card request-card" key={req.id}>
-              <div className="request-card-head">
-                <div>
-                  <h3>Request #{req.id}</h3>
-                  <p>
-                    From: <strong>{req.mentee?.email || `User ${req.mentee?.id}`}</strong>
-                  </p>
-                </div>
-                <span className="role-badge">{req.status}</span>
-              </div>
+            <div className="summary-card" key={req.id}>
+              <p className="summary-alert">Request #{req.id}</p>
 
-              <div className="request-meta">
-                <p>Mentee ID: {req.mentee?.id}</p>
-                <p>Mentor ID: {req.mentor?.id}</p>
-                <p>Created: {new Date(req.created_at).toLocaleString()}</p>
-              </div>
+              <p>
+                <span className="summary-label">From:</span>
+                <br />
+                <strong>{req.mentee?.email || `User ${req.mentee?.id}`}</strong>
+              </p>
 
-              <div className="request-actions">
+              <p>
+                <span className="summary-label">Mentee ID:</span>
+                <br />
+                <strong>{req.mentee?.id}</strong>
+              </p>
+
+              <p>
+                <span className="summary-label">Created:</span>
+                <br />
+                <strong>{new Date(req.created_at).toLocaleString()}</strong>
+              </p>
+
+              <div className="quick-actions">
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm"
                   onClick={() => handleAccept(req.mentee.id)}
                   disabled={busyId === req.mentee.id}
                 >
@@ -93,14 +124,14 @@ export default function Requests() {
                 </button>
 
                 <button
-                  className="btn btn-outline"
+                  className="btn btn-outline btn-sm"
                   onClick={() => handleReject(req.mentee.id)}
                   disabled={busyId === req.mentee.id}
                 >
                   Reject
                 </button>
               </div>
-            </section>
+            </div>
           ))}
         </div>
       )}

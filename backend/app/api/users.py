@@ -5,6 +5,7 @@ import shutil
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.db.session import get_db
 from app.models.user import User
@@ -15,6 +16,16 @@ from app.models.post import Post
 from app.models.journal import JournalEntry
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+class UserRoleUpdate(BaseModel):
+    role: str
+
+
+def require_admin(user: User):
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PROFILE_PICTURES_DIR = BASE_DIR / "uploads" / "profile_pictures"
@@ -135,6 +146,51 @@ def search_users(
         .all()
     )
     return users
+
+
+@router.get("", response_model=list[UserOut])
+def list_all_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    users = (
+        db.query(User)
+        .order_by(User.created_at.desc())
+        .limit(200)
+        .all()
+    )
+    return users
+
+@router.patch("/{user_id}/role", response_model=UserOut)
+def update_user_role(
+    user_id: int,
+    payload: UserRoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    allowed_roles = {"user", "mentor", "admin"}
+    new_role = (payload.role or "").strip().lower()
+
+    if new_role not in allowed_roles:
+        raise HTTPException(status_code=400, detail="Invalid role")
+
+    target_user = db.get(User, user_id)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target_user.id == current_user.id and new_role != "admin":
+        raise HTTPException(status_code=400, detail="Admin cannot remove their own admin role")
+
+    target_user.role = new_role
+    db.add(target_user)
+    db.commit()
+    db.refresh(target_user)
+
+    return target_user
 
 
 @router.get("/{user_id}", response_model=PublicUserProfile)

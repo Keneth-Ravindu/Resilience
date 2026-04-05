@@ -11,10 +11,12 @@ export default function Mentees() {
     try {
       setError("");
       setLoading(true);
+
       const res = await api.get("/mentors/mentees");
       setMentees(res.data || []);
     } catch {
       setError("Failed to load active mentees.");
+      setMentees([]);
     } finally {
       setLoading(false);
     }
@@ -26,7 +28,22 @@ export default function Mentees() {
 
   return (
     <div className="fade-in">
-      <h2 className="page-title">Active Mentees</h2>
+      <div className="dashboard-head">
+        <div>
+          <h2 className="page-title">Active Mentees</h2>
+          <p className="page-subtitle">
+            View your accepted mentees and open their analytics dashboards.
+          </p>
+        </div>
+      </div>
+
+      <div className="stats-grid">
+        <section className="glass-card stat-card">
+          <p className="stat-label">Active Mentees</p>
+          <h3 className="stat-value">{mentees.length}</h3>
+          <p className="stat-text">Accepted mentees currently under your support.</p>
+        </section>
+      </div>
 
       {error ? <p className="error-text">{error}</p> : null}
 
@@ -40,32 +57,36 @@ export default function Mentees() {
           <p>You do not have any accepted mentees yet.</p>
         </section>
       ) : (
-        <div className="card-grid">
+        <div className="summary-grid">
           {mentees.map((m) => (
-            <section className="glass-card mentee-card" key={m.id}>
-              <div className="mentee-card-head">
-                <div>
-                  <h3>Mentee #{m.mentee_user_id}</h3>
-                  <p>Mentorship ID: {m.id}</p>
-                </div>
-                <span className="role-badge">{m.status}</span>
-              </div>
+            <div className="summary-card" key={m.id}>
+              <p className="summary-alert">Mentee #{m.mentee_user_id}</p>
 
-              <div className="request-meta">
-                <p>Mentor ID: {m.mentor_user_id}</p>
-                <p>Accepted Mentee ID: {m.mentee_user_id}</p>
-                <p>Created: {new Date(m.created_at).toLocaleString()}</p>
-              </div>
+              <p>
+                <span className="summary-label">Mentorship ID:</span>
+                <br />
+                <strong>{m.id}</strong>
+              </p>
 
-              <div className="request-actions">
-                <Link
-                  to={`/mentor/mentees/${m.mentee_user_id}/analytics`}
-                  className="btn btn-primary"
-                >
-                  View Analytics
-                </Link>
-              </div>
-            </section>
+              <p>
+                <span className="summary-label">Status:</span>
+                <br />
+                <strong>{m.status}</strong>
+              </p>
+
+              <p>
+                <span className="summary-label">Created:</span>
+                <br />
+                <strong>{new Date(m.created_at).toLocaleString()}</strong>
+              </p>
+
+              <Link
+                to={`/mentor/mentees/${m.mentee_user_id}/analytics`}
+                className="btn btn-primary btn-sm"
+              >
+                View Analytics
+              </Link>
+            </div>
           ))}
         </div>
       )}
