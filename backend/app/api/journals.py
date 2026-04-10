@@ -33,10 +33,15 @@ def get_reaction_counts(db: Session, object_type: str, object_id: int):
     total = sum(counts.values())
     return counts, total
 
-def _enforce_safe_text(text: str):
+def _enforce_safe_text(text: str, used_rewrite: bool = False):
     result = analyze_text_preview(text)
 
     if result.get("is_toxic") is True:
+        if used_rewrite:
+            score = result.get("toxicity_score") or 0
+            if score < 0.85:
+                return result
+
         raise HTTPException(
             status_code=400,
             detail={
@@ -44,6 +49,7 @@ def _enforce_safe_text(text: str):
                 "is_toxic": True,
                 "toxicity_label": result.get("toxicity_label"),
                 "primary_emotion": result.get("primary_emotion"),
+                "rewrite_suggestion": result.get("rewrite_suggestion"),
             },
         )
 
@@ -59,7 +65,7 @@ def create_journal(
     if visibility not in {"private", "public"}:
         raise HTTPException(status_code=400, detail="visibility must be 'private' or 'public'")
     
-    _enforce_safe_text(payload.content)
+    _enforce_safe_text(payload.content, payload.used_rewrite)
     
     entry = JournalEntry(
         user_id=user.id,

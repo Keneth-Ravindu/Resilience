@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../api/client";
+import BlockedContentModal from "../../components/BlockedContentModal";
 import CustomSelect from "../../components/CustomSelect";
 import RewriteAssistBox from "../../components/RewriteAssistBox";
 
@@ -8,6 +9,7 @@ export default function CreateJournal() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [finalContent, setFinalContent] = useState("");
+  const [usedRewrite, setUsedRewrite] = useState(false);
   const [visibility, setVisibility] = useState("private");
 
   const [loading, setLoading] = useState(false);
@@ -15,11 +17,21 @@ export default function CreateJournal() {
   const [error, setError] = useState("");
   const [moderationResult, setModerationResult] = useState(null);
   const [checkingModeration, setCheckingModeration] = useState(false);
+  const [blockedModalOpen, setBlockedModalOpen] = useState(false);
+
+  function showBlockedModal(result) {
+    setModerationResult(result || null);
+    setBlockedModalOpen(true);
+  }
 
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
 
+    setContent(rewriteText);
     setFinalContent(rewriteText);
+    setUsedRewrite(true);
+    setModerationResult(null);
+    setBlockedModalOpen(false);
     setError("");
   }
 
@@ -39,7 +51,7 @@ export default function CreateJournal() {
     } finally {
       setCheckingModeration(false);
     }
-  }  
+  }
 
   async function submitJournal(e) {
     e.preventDefault();
@@ -55,10 +67,15 @@ export default function CreateJournal() {
     const moderation = await checkModeration(contentToSubmit);
 
     if (moderation?.is_toxic) {
-      setError(
-        moderation.message ||
-          "This journal is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."
-      );
+      setError("");
+      showBlockedModal({
+        is_toxic: true,
+        message:
+          moderation.message ||
+          "This journal is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting.",
+        toxicity_label: moderation.toxicity_label,
+        primary_emotion: moderation.primary_emotion,
+      });
       return;
     }
 
@@ -71,6 +88,7 @@ export default function CreateJournal() {
         entry_date: entryDate || null,
         title: title || null,
         content: contentToSubmit,
+        used_rewrite: usedRewrite,
         visibility,
       };
 
@@ -83,21 +101,21 @@ export default function CreateJournal() {
       setFinalContent("");
       setVisibility("private");
       setModerationResult(null);
-      } catch (err) {
+      setBlockedModalOpen(false);
+      setUsedRewrite(false);
+    } catch (err) {
       const backendError = err?.response?.data?.detail;
 
       if (backendError?.is_toxic) {
-        setModerationResult({
+        const blockedResult = {
           is_toxic: true,
           message: backendError.message,
           toxicity_label: backendError.toxicity_label,
           primary_emotion: backendError.primary_emotion,
-        });
+        };
 
-        setError(
-          backendError.message ||
-            "This journal is too harsh or toxic. Please rewrite it."
-        );
+        setError("");
+        showBlockedModal(blockedResult);
       } else {
         setError("Failed to create journal.");
       }
@@ -160,6 +178,7 @@ export default function CreateJournal() {
                   value={content}
                   onChange={(e) => {
                     setContent(e.target.value);
+                    setUsedRewrite(false);
                     setModerationResult(null);
                     setError("");
                   }}
@@ -181,6 +200,7 @@ export default function CreateJournal() {
                   value={finalContent}
                   onChange={(e) => {
                     setFinalContent(e.target.value);
+                    setUsedRewrite(false);
                     setModerationResult(null);
                     setError("");
                   }}
@@ -189,33 +209,10 @@ export default function CreateJournal() {
 
               <div className="journal-helper-note">
                 <p className="feed-meta">
-                  When you submit, the final version will be used if provided. Otherwise,
-                  the original journal content will be saved.
+                  When you submit, the final version will be used if provided.
+                  Otherwise, the original journal content will be saved.
                 </p>
               </div>
-              {moderationResult?.is_toxic ? (
-                <div className="rewrite-reason-box">
-                  <p className="rewrite-reason-label">Posting blocked</p>
-                  <p className="rewrite-reason-text">
-                    {moderationResult.message ||
-                      "This journal is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."}
-                  </p>
-
-                  <div className="rewrite-meta-row">
-                    {moderationResult.primary_emotion ? (
-                      <span className="tag-pill">
-                        Emotion: {moderationResult.primary_emotion}
-                      </span>
-                    ) : null}
-
-                    {moderationResult.toxicity_label ? (
-                      <span className="tag-pill">
-                        Tone: {moderationResult.toxicity_label}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -237,6 +234,15 @@ export default function CreateJournal() {
         {message ? <p className="success-text">{message}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
       </section>
+
+      <BlockedContentModal
+        open={blockedModalOpen}
+        onClose={() => setBlockedModalOpen(false)}
+        title="Journal Blocked"
+        message={moderationResult?.message}
+        toxicityLabel={moderationResult?.toxicity_label}
+        primaryEmotion={moderationResult?.primary_emotion}
+      />
     </div>
   );
 }

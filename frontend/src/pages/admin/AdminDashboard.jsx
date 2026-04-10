@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/client";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [error, setError] = useState("");
@@ -48,6 +50,32 @@ export default function AdminDashboard() {
     }
   }
 
+  function getRoleBadgeClass(role) {
+    if (role === "admin") return "admin-role-pill";
+    if (role === "mentor") return "mentor-role-pill";
+    return "user-role-pill";
+  }
+
+  const filteredUsers = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    if (!term) return users;
+
+    return users.filter((user) => {
+      const displayName = (user.display_name || "").toLowerCase();
+      const name = (user.name || "").toLowerCase();
+      const email = (user.email || "").toLowerCase();
+      const role = (user.role || "").toLowerCase();
+
+      return (
+        displayName.includes(term) ||
+        name.includes(term) ||
+        email.includes(term) ||
+        role.includes(term)
+      );
+    });
+  }, [users, searchTerm]);
+
   const totalUsers = users.length;
   const totalMentors = users.filter((u) => u.role === "mentor").length;
   const totalAdmins = users.filter((u) => u.role === "admin").length;
@@ -58,8 +86,19 @@ export default function AdminDashboard() {
         <div>
           <h2 className="page-title">Admin Dashboard</h2>
           <p className="page-subtitle">
-            Manage user roles and supervise platform access.
+            Manage user roles, inspect accounts, and supervise platform access.
           </p>
+        </div>
+
+        <div className="quick-actions">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={loadUsers}
+            disabled={loading}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
       </div>
 
@@ -84,29 +123,69 @@ export default function AdminDashboard() {
       </div>
 
       <section className="glass-card">
+        <div className="page-head-with-actions" style={{ marginBottom: "14px" }}>
+          <div>
+            <h3 className="section-title">User Management</h3>
+            <p className="feed-meta">
+              Search by display name, name, email, or role.
+            </p>
+          </div>
+        </div>
+
+        <div className="field" style={{ marginBottom: "16px" }}>
+          <label>Search Users</label>
+          <input
+            type="text"
+            placeholder="Search users, mentors, admins..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         {message ? <p className="success-text">{message}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
 
         {loading ? (
           <p>Loading users...</p>
-        ) : users.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <p>No users found.</p>
         ) : (
           <div className="simple-list">
-            {users.map((user) => {
+            {filteredUsers.map((user) => {
               const isLoading = actionLoadingId === user.id;
+              const displayName = user.display_name || user.name;
 
               return (
-                <div className="simple-list-item" key={user.id}>
-                  <div>
-                    <strong>{user.display_name || user.name}</strong>
+                <div className="simple-list-item admin-user-row" key={user.id}>
+                  <div className="admin-user-main">
+                    <div className="admin-user-head">
+                      <strong>{displayName}</strong>
+                      <span className={`admin-role-chip ${getRoleBadgeClass(user.role)}`}>
+                        {user.role}
+                      </span>
+                    </div>
+
                     <p>{user.email}</p>
-                    <p className="feed-meta">
-                      Role: <span className="role-badge">{user.role}</span>
-                    </p>
+
+                    <div className="user-search-tags">
+                      {user.age_range ? (
+                        <span className="tag-pill">{user.age_range}</span>
+                      ) : null}
+
+                      {user.fitness_level ? (
+                        <span className="tag-pill">{user.fitness_level}</span>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className="quick-actions">
+                    <Link
+                      to={`/app/profile/${user.id}`}
+                      className="btn btn-outline btn-sm"
+                    >
+                      View Profile
+                    </Link>
+
                     {user.role !== "mentor" ? (
                       <button
                         type="button"
@@ -134,7 +213,7 @@ export default function AdminDashboard() {
                         disabled={isLoading}
                         onClick={() => updateRole(user.id, "admin")}
                       >
-                        Make Admin
+                        {isLoading ? "Updating..." : "Make Admin"}
                       </button>
                     ) : null}
                   </div>

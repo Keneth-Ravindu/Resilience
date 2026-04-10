@@ -254,15 +254,18 @@ def analyze_and_store_text(
             )
 
             try:
-                rewritten, model_used = rewrite_text(cleaned)
+                rewrite_result = rewrite_text(cleaned)
 
-                rewrite_suggestion = rewritten
-                rewrite_model = model_used
-                rewrite_reason = _build_rewrite_reason(
-                    toxicity_label=nlp_result.toxicity_label,
-                    toxicity_score=nlp_result.toxicity_score,
-                    threshold=threshold,
-                )
+                rewrite_suggestion = rewrite_result.get("rewrite_suggestion")
+                rewrite_model = rewrite_result.get("rewrite_model")
+                rewrite_reason = rewrite_result.get("rewrite_reason")
+
+                if not rewrite_reason:
+                    rewrite_reason = _build_rewrite_reason(
+                        toxicity_label=nlp_result.toxicity_label,
+                        toxicity_score=nlp_result.toxicity_score,
+                        threshold=threshold,
+                    )
 
                 logger.info(
                     "AUTO-REWRITE SUCCESS object=%s:%s model=%s reason=%s",

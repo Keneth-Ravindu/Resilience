@@ -9,3 +9,4 @@ class RewriteResponse(BaseModel):
     original_text: str
     rewritten_text: str
     model: str
+    reason: str = ""

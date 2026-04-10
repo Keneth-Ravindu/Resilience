@@ -40,10 +40,15 @@ def _detect_media_type(content_type: str) -> str | None:
         return "video"
     return None
 
-def _enforce_safe_text(text: str):
+def _enforce_safe_text(text: str, used_rewrite: bool = False):
     result = analyze_text_preview(text)
 
     if result.get("is_toxic") is True:
+        if used_rewrite:
+            score = result.get("toxicity_score") or 0
+            if score < 0.85:
+                return result
+
         raise HTTPException(
             status_code=400,
             detail={
@@ -51,6 +56,7 @@ def _enforce_safe_text(text: str):
                 "is_toxic": True,
                 "toxicity_label": result.get("toxicity_label"),
                 "primary_emotion": result.get("primary_emotion"),
+                "rewrite_suggestion": result.get("rewrite_suggestion"),
             },
         )
 
@@ -155,7 +161,7 @@ def create_post(
     if media_type and not payload.media_url:
         raise HTTPException(status_code=400, detail="media_url is required when media_type is provided")
     
-    _enforce_safe_text(payload.content)
+    _enforce_safe_text(payload.content, payload.used_rewrite)
 
     post = Post(
         user_id=user.id,
@@ -294,7 +300,7 @@ def add_comment(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
-    _enforce_safe_text(payload.content)
+    _enforce_safe_text(payload.content, payload.used_rewrite)
 
     comment = Comment(
         post_id=post_id,

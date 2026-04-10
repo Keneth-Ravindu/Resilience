@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/client";
+import BlockedContentModal from "../../components/BlockedContentModal";
 import ReactionButton from "../../components/ReactionButton";
 import RewriteAssistBox from "../../components/RewriteAssistBox";
 import RewriteSuggestionCard from "../../components/RewriteSuggestionCard";
@@ -53,7 +54,8 @@ function formatRelativeTime(dateValue) {
 }
 
 function Avatar({ author, size = "md" }) {
-  const className = size === "sm" ? "feed-avatar feed-avatar-sm" : "feed-avatar";
+  const className =
+    size === "sm" ? "feed-avatar feed-avatar-sm" : "feed-avatar";
 
   if (author?.profile_picture_url) {
     return (
@@ -264,13 +266,17 @@ function CommentAnalysisSection({ commentId }) {
 
 function CommentSection({ postId }) {
   const [comments, setComments] = useState([]);
-  const [content, setContent] = useState("");
-  const [finalContent, setFinalContent] = useState("");
+  const [commentInput, setCommentInput] = useState({
+    content: "",
+    finalContent: "",
+    usedRewrite: false,
+  });
   const [loadingComments, setLoadingComments] = useState(true);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
   const [moderationResult, setModerationResult] = useState(null);
   const [checkingModeration, setCheckingModeration] = useState(false);
+  const [blockedModalOpen, setBlockedModalOpen] = useState(false);
 
   const loadComments = async () => {
     try {
@@ -278,7 +284,6 @@ function CommentSection({ postId }) {
 
       const res = await api.get(`/posts/${postId}/comments`);
       setComments(res.data || []);
-
       setError("");
     } catch {
       setError("Failed to load comments.");
@@ -294,8 +299,19 @@ function CommentSection({ postId }) {
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
 
-    setFinalContent(rewriteText);
+    setCommentInput((prev) => ({
+      ...prev,
+      finalContent: rewriteText,
+      usedRewrite: true,
+    }));
+    setModerationResult(null);
+    setBlockedModalOpen(false);
     setError("");
+  }
+
+  function showBlockedModal(result) {
+    setModerationResult(result || null);
+    setBlockedModalOpen(true);
   }
 
   async function checkModeration(textToCheck) {
@@ -320,16 +336,25 @@ function CommentSection({ postId }) {
     e.preventDefault();
     setModerationResult(null);
 
-    const contentToSubmit = (finalContent || content).trim();
+    const contentToSubmit =
+      commentInput.finalContent.trim().length > 0
+        ? commentInput.finalContent.trim()
+        : commentInput.content.trim();
+
     if (!contentToSubmit) return;
 
     const moderation = await checkModeration(contentToSubmit);
 
     if (moderation?.is_toxic) {
-      setError(
-        moderation.message ||
-          "This comment is too harsh or toxic. Please rewrite it in a more respectful way."
-      );
+      setError("");
+      showBlockedModal({
+        is_toxic: true,
+        message:
+          moderation.message ||
+          "This comment is too harsh or toxic. Please rewrite it in a more respectful way.",
+        toxicity_label: moderation.toxicity_label,
+        primary_emotion: moderation.primary_emotion,
+      });
       return;
     }
 
@@ -339,27 +364,30 @@ function CommentSection({ postId }) {
 
       await api.post(`/posts/${postId}/comments`, {
         content: contentToSubmit,
+        used_rewrite: commentInput.usedRewrite,
       });
 
-      setContent("");
-      setFinalContent("");
+      setCommentInput({
+        content: "",
+        finalContent: "",
+        usedRewrite: false,
+      });
       setModerationResult(null);
+      setBlockedModalOpen(false);
       await loadComments();
     } catch (err) {
       const backendError = err?.response?.data?.detail;
 
       if (backendError?.is_toxic) {
-        setModerationResult({
+        const blockedResult = {
           is_toxic: true,
           message: backendError.message,
           toxicity_label: backendError.toxicity_label,
           primary_emotion: backendError.primary_emotion,
-        });
+        };
 
-        setError(
-          backendError.message ||
-            "This comment is too harsh or toxic. Please rewrite it."
-        );
+        setError("");
+        showBlockedModal(blockedResult);
       } else {
         setError("Failed to post comment.");
       }
@@ -433,19 +461,23 @@ function CommentSection({ postId }) {
         onSubmit={submitComment}
         className="comment-form modern-comment-form"
       >
-      <textarea
-        rows="2"
-        placeholder="Write a supportive comment..."
-        value={content}
-        onChange={(e) => {
-          setContent(e.target.value);
-          setModerationResult(null);
-          setError("");
-        }}
-      />
+        <textarea
+          rows="2"
+          placeholder="Write a supportive comment..."
+          value={commentInput.content}
+          onChange={(e) => {
+            setCommentInput((prev) => ({
+              ...prev,
+              content: e.target.value,
+              usedRewrite: false,
+            }));
+            setModerationResult(null);
+            setError("");
+          }}
+        />
 
         <RewriteAssistBox
-          text={content}
+          text={commentInput.content}
           onUseRewrite={handleUseRewrite}
           label="Comment AI Rewrite"
           compact
@@ -455,44 +487,23 @@ function CommentSection({ postId }) {
         <textarea
           rows="3"
           placeholder="Manual / final comment version..."
-          value={finalContent}
+          value={commentInput.finalContent}
           onChange={(e) => {
-            setFinalContent(e.target.value);
+            setCommentInput((prev) => ({
+              ...prev,
+              finalContent: e.target.value,
+              usedRewrite: false,
+            }));
             setModerationResult(null);
             setError("");
           }}
         />
 
-        {moderationResult?.is_toxic ? (
-          <div className="rewrite-reason-box">
-            <p className="rewrite-reason-label">Comment blocked</p>
-
-            <p className="rewrite-reason-text">
-              {moderationResult.message ||
-                "This comment is too harsh or toxic. Please rewrite it respectfully."}
-            </p>
-
-            <div className="rewrite-meta-row">
-              {moderationResult.primary_emotion ? (
-                <span className="tag-pill">
-                  Emotion: {moderationResult.primary_emotion}
-                </span>
-              ) : null}
-
-              {moderationResult.toxicity_label ? (
-                <span className="tag-pill">
-                  Tone: {moderationResult.toxicity_label}
-                </span>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
-          <button
-            className="btn btn-primary btn-sm"
-            type="submit"
-            disabled={posting || checkingModeration}
-          >
+        <button
+          className="btn btn-primary btn-sm"
+          type="submit"
+          disabled={posting || checkingModeration}
+        >
           {checkingModeration
             ? "Checking..."
             : posting
@@ -502,6 +513,15 @@ function CommentSection({ postId }) {
       </form>
 
       {error ? <p className="error-text">{error}</p> : null}
+
+      <BlockedContentModal
+        open={blockedModalOpen}
+        onClose={() => setBlockedModalOpen(false)}
+        title="Comment Blocked"
+        message={moderationResult?.message}
+        toxicityLabel={moderationResult?.toxicity_label}
+        primaryEmotion={moderationResult?.primary_emotion}
+      />
     </div>
   );
 }
@@ -532,7 +552,6 @@ export default function Feed() {
 
       const res = await api.get("/posts");
       setPosts(res.data || []);
-
       setError("");
     } catch {
       setError("Failed to load posts.");
@@ -617,9 +636,7 @@ export default function Feed() {
 
                       <span className="post-meta-dot">•</span>
 
-                      <span className="feed-subtitle">
-                        Post #{post.id}
-                      </span>
+                      <span className="feed-subtitle">Post #{post.id}</span>
                     </div>
                   </div>
                 </div>

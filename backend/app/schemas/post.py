@@ -22,6 +22,7 @@ class PostCreate(BaseModel):
     tags: list[str] = Field(default_factory=list)
     media_url: str | None = None
     media_type: str | None = None
+    used_rewrite: bool = False
 
 
 # ----------------------------
@@ -53,6 +54,7 @@ class PostOut(BaseModel):
 
 class CommentCreate(BaseModel):
     content: str
+    used_rewrite: bool = False
 
 
 # ----------------------------

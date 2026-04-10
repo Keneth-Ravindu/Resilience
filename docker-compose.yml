@@ -36,6 +36,16 @@ services:
     volumes:
       - pgadmin_data_v2:/var/lib/pgadmin
 
+  rewrite_service:
+    build:
+      context: ./rewrite_service
+    container_name: resilience_rewrite_service
+    restart: unless-stopped
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./rewrite_service:/app
+
 volumes:
   postgres_data_v2:
   pgadmin_data_v2:

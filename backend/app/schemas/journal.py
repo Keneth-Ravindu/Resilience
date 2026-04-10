@@ -7,6 +7,7 @@ class JournalCreate(BaseModel):
     title: str | None = None
     content: str
     visibility: str = Field(default="private")
+    used_rewrite: bool = False
 
 
 class JournalOut(BaseModel):

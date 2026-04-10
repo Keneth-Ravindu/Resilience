@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import api from "../../api/client";
+import BlockedContentModal from "../../components/BlockedContentModal";
 import RewriteAssistBox from "../../components/RewriteAssistBox";
 
 export default function CreatePost() {
   const [content, setContent] = useState("");
   const [finalContent, setFinalContent] = useState("");
+  const [usedRewrite, setUsedRewrite] = useState(false);
   const [tags, setTags] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState("");
@@ -16,6 +18,7 @@ export default function CreatePost() {
   const [error, setError] = useState("");
   const [moderationResult, setModerationResult] = useState(null);
   const [checkingModeration, setCheckingModeration] = useState(false);
+  const [blockedModalOpen, setBlockedModalOpen] = useState(false);
 
   const previewUrl = useMemo(() => {
     if (!selectedFile) return null;
@@ -25,8 +28,17 @@ export default function CreatePost() {
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
 
+    setContent(rewriteText);
     setFinalContent(rewriteText);
+    setUsedRewrite(true); 
+    setModerationResult(null);
+    setBlockedModalOpen(false);
     setError("");
+  }
+
+  function showBlockedModal(result) {
+    setModerationResult(result || null);
+    setBlockedModalOpen(true);
   }
 
   const handleFileChange = (e) => {
@@ -105,10 +117,15 @@ export default function CreatePost() {
     const moderation = await checkModeration(contentToSubmit);
 
     if (moderation?.is_toxic) {
-      setError(
-        moderation.message ||
-          "This post is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."
-      );
+      setError("");
+      showBlockedModal({
+        is_toxic: true,
+        message:
+          moderation.message ||
+          "This post is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting.",
+        toxicity_label: moderation.toxicity_label,
+        primary_emotion: moderation.primary_emotion,
+      });
       return;
     }
 
@@ -119,6 +136,7 @@ export default function CreatePost() {
 
       const payload = {
         content: contentToSubmit,
+        used_rewrite: usedRewrite,
         tags: tags
           .split(",")
           .map((t) => t.trim())
@@ -133,25 +151,25 @@ export default function CreatePost() {
       setContent("");
       setFinalContent("");
       setTags("");
+      setUsedRewrite(false);
       setSelectedFile(null);
       setUploadedMediaUrl("");
       setUploadedMediaType("");
       setModerationResult(null);
+      setBlockedModalOpen(false);
     } catch (err) {
       const backendError = err?.response?.data?.detail;
 
       if (backendError?.is_toxic) {
-        setModerationResult({
+        const blockedResult = {
           is_toxic: true,
           message: backendError.message,
           toxicity_label: backendError.toxicity_label,
           primary_emotion: backendError.primary_emotion,
-        });
+        };
 
-        setError(
-          backendError.message ||
-            "This post is too harsh or toxic. Please rewrite it."
-        );
+        setError("");
+        showBlockedModal(blockedResult);
       } else {
         setError("Failed to create post.");
       }
@@ -185,6 +203,7 @@ export default function CreatePost() {
                   value={content}
                   onChange={(e) => {
                     setContent(e.target.value);
+                    setUsedRewrite(false);
                     setModerationResult(null);
                     setError("");
                   }}
@@ -206,6 +225,7 @@ export default function CreatePost() {
                   value={finalContent}
                   onChange={(e) => {
                     setFinalContent(e.target.value);
+                    setUsedRewrite(false);
                     setModerationResult(null);
                     setError("");
                   }}
@@ -218,30 +238,6 @@ export default function CreatePost() {
                   Otherwise, the original post content will be saved.
                 </p>
               </div>
-
-              {moderationResult?.is_toxic ? (
-                <div className="rewrite-reason-box">
-                  <p className="rewrite-reason-label">Posting blocked</p>
-                  <p className="rewrite-reason-text">
-                    {moderationResult.message ||
-                      "This post is too harsh or toxic. Please use the rewrite suggestion or rewrite it in a more respectful way before posting."}
-                  </p>
-
-                  <div className="rewrite-meta-row">
-                    {moderationResult.primary_emotion ? (
-                      <span className="tag-pill">
-                        Emotion: {moderationResult.primary_emotion}
-                      </span>
-                    ) : null}
-
-                    {moderationResult.toxicity_label ? (
-                      <span className="tag-pill">
-                        Tone: {moderationResult.toxicity_label}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
 
               <div className="field">
                 <label>Tags (comma separated)</label>
@@ -271,7 +267,9 @@ export default function CreatePost() {
                     className="create-post-file-input"
                   />
                   <span className="create-post-file-button">Choose File</span>
-                  <span className="create-post-file-name">{selectedFileName}</span>
+                  <span className="create-post-file-name">
+                    {selectedFileName}
+                  </span>
                 </label>
 
                 {selectedFile ? (
@@ -340,6 +338,15 @@ export default function CreatePost() {
         {message ? <p className="success-text">{message}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
       </section>
+
+      <BlockedContentModal
+        open={blockedModalOpen}
+        onClose={() => setBlockedModalOpen(false)}
+        title="Post Blocked"
+        message={moderationResult?.message}
+        toxicityLabel={moderationResult?.toxicity_label}
+        primaryEmotion={moderationResult?.primary_emotion}
+      />
     </div>
   );
 }
