@@ -67,7 +67,7 @@ Thumbs.db
 # ===============================
 # AI / ML Models (IMPORTANT)
 # ===============================
-models/
+
 *.pt
 *.pth
 *.bin
