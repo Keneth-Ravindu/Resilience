@@ -119,7 +119,7 @@ export default function MentorDashboard() {
               {mentees.slice(0, 5).map((mentee) => (
                 <div className="simple-list-item" key={mentee.mentee_user_id}>
                   <div>
-                    <strong>{mentee.display_name}</strong>
+                    <strong>{mentee.display_name || `User #${mentee.mentee_user_id}`}</strong>
                     <p>
                       Dominant emotion: {mentee.dominant_emotion || "No data"} | Toxicity:{" "}
                       {Number(mentee.avg_toxicity || 0).toFixed(3)}
@@ -144,7 +144,9 @@ export default function MentorDashboard() {
           <div className="summary-grid">
             {mentees.map((mentee) => (
               <div className="summary-card" key={mentee.mentee_user_id}>
-                <p className="summary-alert">{mentee.display_name}</p>
+                <p className="summary-alert">
+                  {mentee.display_name || `User #${mentee.mentee_user_id}`}
+                </p>
 
                 <p>
                   <span className="summary-label">Risk level:</span>

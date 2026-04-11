@@ -2,6 +2,43 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/client";
 
+const API_BASE_URL = "http://127.0.0.1:8000";
+
+function resolveMediaUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_BASE_URL}${url}`;
+}
+
+function getDisplayName(user) {
+  if (!user) return "Unknown User";
+  return user.display_name || user.name || user.email || `User #${user.id}`;
+}
+
+function getInitials(user) {
+  const name = getDisplayName(user);
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function UserAvatar({ user }) {
+  if (user?.profile_picture_url) {
+    return (
+      <img
+        src={resolveMediaUrl(user.profile_picture_url)}
+        alt={getDisplayName(user)}
+        className="feed-avatar"
+      />
+    );
+  }
+
+  return <div className="feed-avatar feed-avatar-fallback">{getInitials(user)}</div>;
+}
+
 export default function Mentees() {
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,36 +95,57 @@ export default function Mentees() {
         </section>
       ) : (
         <div className="summary-grid">
-          {mentees.map((m) => (
-            <div className="summary-card" key={m.id}>
-              <p className="summary-alert">Mentee #{m.mentee_user_id}</p>
+          {mentees.map((m) => {
+            const mentee = m.mentee;
 
-              <p>
-                <span className="summary-label">Mentorship ID:</span>
-                <br />
-                <strong>{m.id}</strong>
-              </p>
+            return (
+              <div className="summary-card" key={m.id}>
+                <div className="comment-author-wrap" style={{ marginBottom: "12px" }}>
+                  <UserAvatar user={mentee} />
+                  <div>
+                    <p className="summary-alert" style={{ marginBottom: "4px" }}>
+                      {getDisplayName(mentee)}
+                    </p>
+                    <p className="feed-meta">{mentee?.email}</p>
+                  </div>
+                </div>
 
-              <p>
-                <span className="summary-label">Status:</span>
-                <br />
-                <strong>{m.status}</strong>
-              </p>
+                <p>
+                  <span className="summary-label">Mentorship ID:</span>
+                  <br />
+                  <strong>{m.id}</strong>
+                </p>
 
-              <p>
-                <span className="summary-label">Created:</span>
-                <br />
-                <strong>{new Date(m.created_at).toLocaleString()}</strong>
-              </p>
+                <p>
+                  <span className="summary-label">Status:</span>
+                  <br />
+                  <strong>{m.status}</strong>
+                </p>
 
-              <Link
-                to={`/mentor/mentees/${m.mentee_user_id}/analytics`}
-                className="btn btn-primary btn-sm"
-              >
-                View Analytics
-              </Link>
-            </div>
-          ))}
+                <p>
+                  <span className="summary-label">Fitness level:</span>
+                  <br />
+                  <strong>{mentee?.fitness_level || "Not set"}</strong>
+                </p>
+
+                <div className="quick-actions">
+                  <Link
+                    to={`/app/profile/${mentee?.id}`}
+                    className="btn btn-outline btn-sm"
+                  >
+                    View Profile
+                  </Link>
+
+                  <Link
+                    to={`/mentor/mentees/${mentee?.id}/analytics`}
+                    className="btn btn-primary btn-sm"
+                  >
+                    View Analytics
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

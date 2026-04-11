@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from "../../api/client";
 import {
   LineChart,
@@ -10,6 +10,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 const EMOTION_COLORS = {
   joy: "#facc15",
@@ -41,6 +43,41 @@ const EMOTION_COLORS = {
   remorse: "#8b5cf6",
   surprise: "#0ea5e9",
 };
+
+function resolveMediaUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_BASE_URL}${url}`;
+}
+
+function getDisplayName(user) {
+  if (!user) return "Unknown User";
+  return user.display_name || user.name || user.email || `User #${user.id}`;
+}
+
+function getInitials(user) {
+  const name = getDisplayName(user);
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function UserAvatar({ user }) {
+  if (user?.profile_picture_url) {
+    return (
+      <img
+        src={resolveMediaUrl(user.profile_picture_url)}
+        alt={getDisplayName(user)}
+        className="feed-avatar"
+      />
+    );
+  }
+
+  return <div className="feed-avatar feed-avatar-fallback">{getInitials(user)}</div>;
+}
 
 function TrendBadge({ value }) {
   const cls =
@@ -129,26 +166,26 @@ function TypeAnalyticsCard({ label, data }) {
         </section>
       </div>
 
-        <section className="glass-card chart-card">
+      <section className="glass-card chart-card">
         <div className="card-head">
-            <div>
+          <div>
             <h3>{label} Emotion Series</h3>
             <p>Top weekly emotions plotted across available days.</p>
-            </div>
+          </div>
         </div>
 
         {selectedEmotions.length ? (
-            <div className="chart-legend">
+          <div className="chart-legend">
             {selectedEmotions.map((emotion) => (
-                <div className="chart-legend-item" key={emotion}>
+              <div className="chart-legend-item" key={emotion}>
                 <span
-                    className="chart-legend-dot"
-                    style={{ backgroundColor: EMOTION_COLORS[emotion] || "#7c9cff" }}
+                  className="chart-legend-dot"
+                  style={{ backgroundColor: EMOTION_COLORS[emotion] || "#7c9cff" }}
                 />
                 <span>{emotion}</span>
-                </div>
+              </div>
             ))}
-            </div>
+          </div>
         ) : null}
 
         {chartData.length > 1 ? (
@@ -160,7 +197,7 @@ function TypeAnalyticsCard({ label, data }) {
                 <YAxis />
                 <Tooltip />
                 {selectedEmotions.map((emotion) => (
-                <Line
+                  <Line
                     key={emotion}
                     type="monotone"
                     dataKey={emotion}
@@ -168,7 +205,7 @@ function TypeAnalyticsCard({ label, data }) {
                     strokeWidth={2.5}
                     dot={{ r: 3 }}
                     activeDot={{ r: 5 }}
-                />
+                  />
                 ))}
               </LineChart>
             </ResponsiveContainer>
@@ -236,13 +273,15 @@ export default function MenteeAnalytics() {
     );
   }
 
+  const mentee = data?.mentee;
+
   return (
     <div className="fade-in">
       <div className="analytics-page-head">
         <div>
           <h2 className="page-title">Mentee Analytics</h2>
           <p className="page-subtitle">
-            Viewing read-only analytics for mentee #{menteeId}
+            Read-only analytics for your accepted mentee.
           </p>
         </div>
 
@@ -257,6 +296,32 @@ export default function MenteeAnalytics() {
           </div>
         </div>
       </div>
+
+      <section className="glass-card" style={{ marginBottom: "16px" }}>
+        <div className="comment-author-wrap">
+          <UserAvatar user={mentee} />
+          <div>
+            <h3 style={{ margin: 0 }}>{getDisplayName(mentee)}</h3>
+            <p className="feed-meta" style={{ marginTop: "4px" }}>
+              {mentee?.email}
+            </p>
+            <div className="user-search-tags" style={{ marginTop: "8px" }}>
+              {mentee?.fitness_level ? (
+                <span className="tag-pill">{mentee.fitness_level}</span>
+              ) : null}
+              {mentee?.age_range ? (
+                <span className="tag-pill">{mentee.age_range}</span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="quick-actions" style={{ marginLeft: "auto" }}>
+            <Link to={`/app/profile/${mentee?.id}`} className="btn btn-outline btn-sm">
+              View Profile
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <TypeAnalyticsCard label="Posts" data={data?.by_type?.post} />
       <TypeAnalyticsCard label="Journals" data={data?.by_type?.journal} />

@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, date
-from typing import Optional, List, Any, Dict
+from typing import List, Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.session import get_db
 from app.models.user import User
@@ -24,9 +24,46 @@ from app.repositories import mentor_repo
 router = APIRouter(prefix="/mentors", tags=["mentors"])
 
 
-# -------------------------
-# Mentorship lifecycle
-# -------------------------
+def _user_summary(user: User | None):
+    if not user:
+        return None
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "display_name": user.display_name,
+        "profile_picture_url": user.profile_picture_url,
+        "status_text": user.status_text,
+        "age_range": user.age_range,
+        "fitness_level": user.fitness_level,
+        "role": user.role,
+    }
+
+
+def _mentorship_out(ms: Mentorship):
+    return {
+        "id": ms.id,
+        "mentor_user_id": ms.mentor_user_id,
+        "mentee_user_id": ms.mentee_user_id,
+        "status": ms.status,
+        "created_at": ms.created_at,
+        "mentor": _user_summary(getattr(ms, "mentor", None)),
+        "mentee": _user_summary(getattr(ms, "mentee", None)),
+    }
+
+
+def _load_mentorship_with_users(db: Session, mentorship_id: int):
+    return (
+        db.query(Mentorship)
+        .options(
+            joinedload(Mentorship.mentor),
+            joinedload(Mentorship.mentee),
+        )
+        .filter(Mentorship.id == mentorship_id)
+        .first()
+    )
+
+
 @router.post("/request", response_model=MentorshipOut)
 def request_mentor(
     payload: MentorshipRequestIn,
@@ -42,7 +79,8 @@ def request_mentor(
         mentee_user_id=user.id,
     )
     if existing:
-        return existing  # idempotent
+        existing_full = _load_mentorship_with_users(db, existing.id)
+        return _mentorship_out(existing_full)
 
     try:
         ms = mentor_repo.create_mentorship_request(
@@ -50,7 +88,8 @@ def request_mentor(
             mentor_user_id=payload.mentor_user_id,
             mentee_user_id=user.id,
         )
-        return ms
+        ms_full = _load_mentorship_with_users(db, ms.id)
+        return _mentorship_out(ms_full)
     except Exception:
         raise HTTPException(status_code=400, detail="Mentorship request already exists.")
 
@@ -69,9 +108,12 @@ def accept_mentorship(
         raise HTTPException(status_code=403, detail="Only the mentor can accept this request.")
 
     if ms.status != "pending":
-        return ms
+        ms_full = _load_mentorship_with_users(db, ms.id)
+        return _mentorship_out(ms_full)
 
-    return mentor_repo.update_mentorship_status(db, ms, status="accepted")
+    updated = mentor_repo.update_mentorship_status(db, ms, status="accepted")
+    updated_full = _load_mentorship_with_users(db, updated.id)
+    return _mentorship_out(updated_full)
 
 
 @router.post("/{mentorship_id}/reject", response_model=MentorshipOut)
@@ -88,9 +130,12 @@ def reject_mentorship(
         raise HTTPException(status_code=403, detail="Only the mentor can reject this request.")
 
     if ms.status != "pending":
-        return ms
+        ms_full = _load_mentorship_with_users(db, ms.id)
+        return _mentorship_out(ms_full)
 
-    return mentor_repo.update_mentorship_status(db, ms, status="rejected")
+    updated = mentor_repo.update_mentorship_status(db, ms, status="rejected")
+    updated_full = _load_mentorship_with_users(db, updated.id)
+    return _mentorship_out(updated_full)
 
 
 @router.post("/accept", response_model=MentorshipOut)
@@ -107,7 +152,9 @@ def accept_by_mentee(
     if not ms:
         raise HTTPException(status_code=404, detail="Pending mentorship request not found.")
 
-    return mentor_repo.update_mentorship_status(db, ms, status="accepted")
+    updated = mentor_repo.update_mentorship_status(db, ms, status="accepted")
+    updated_full = _load_mentorship_with_users(db, updated.id)
+    return _mentorship_out(updated_full)
 
 
 @router.post("/reject", response_model=MentorshipOut)
@@ -124,7 +171,9 @@ def reject_by_mentee(
     if not ms:
         raise HTTPException(status_code=404, detail="Pending mentorship request not found.")
 
-    return mentor_repo.update_mentorship_status(db, ms, status="rejected")
+    updated = mentor_repo.update_mentorship_status(db, ms, status="rejected")
+    updated_full = _load_mentorship_with_users(db, updated.id)
+    return _mentorship_out(updated_full)
 
 
 @router.post("/{mentorship_id}/end", response_model=MentorshipOut)
@@ -141,9 +190,12 @@ def end_mentorship(
         raise HTTPException(status_code=403, detail="Not allowed.")
 
     if ms.status == "ended":
-        return ms
+        ms_full = _load_mentorship_with_users(db, ms.id)
+        return _mentorship_out(ms_full)
 
-    return mentor_repo.update_mentorship_status(db, ms, status="ended")
+    updated = mentor_repo.update_mentorship_status(db, ms, status="ended")
+    updated_full = _load_mentorship_with_users(db, updated.id)
+    return _mentorship_out(updated_full)
 
 
 @router.get("/my", response_model=List[MentorshipOut])
@@ -151,38 +203,27 @@ def my_mentorships(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return mentor_repo.list_my_mentorships(db, user_id=user.id)
+    rows = (
+        db.query(Mentorship)
+        .options(joinedload(Mentorship.mentor), joinedload(Mentorship.mentee))
+        .filter(
+            (Mentorship.mentor_user_id == user.id) |
+            (Mentorship.mentee_user_id == user.id)
+        )
+        .order_by(Mentorship.created_at.desc())
+        .all()
+    )
+    return [_mentorship_out(ms) for ms in rows]
 
 
-# -------------------------
-# Inbox + Summary
-# -------------------------
 @router.get("/requests/pending", response_model=List[MentorshipOut])
 def pending_requests(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return mentor_repo.list_pending_requests_for_mentor(db, mentor_user_id=user.id)
-
-
-@router.get("/requests/pending/detailed")
-def pending_requests_detailed(
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    Mentor = aliased(User)
-    Mentee = aliased(User)
-
     rows = (
-        db.query(
-            Mentorship,
-            Mentor.id,
-            Mentor.email,
-            Mentee.id,
-            Mentee.email,
-        )
-        .join(Mentor, Mentorship.mentor_user_id == Mentor.id)
-        .join(Mentee, Mentorship.mentee_user_id == Mentee.id)
+        db.query(Mentorship)
+        .options(joinedload(Mentorship.mentor), joinedload(Mentorship.mentee))
         .filter(
             Mentorship.mentor_user_id == user.id,
             Mentorship.status == "pending",
@@ -190,20 +231,25 @@ def pending_requests_detailed(
         .order_by(Mentorship.created_at.desc())
         .all()
     )
+    return [_mentorship_out(ms) for ms in rows]
 
-    out = []
-    for ms, mentor_id, mentor_email, mentee_id, mentee_email in rows:
-        out.append(
-            {
-                "id": ms.id,
-                "status": ms.status,
-                "created_at": ms.created_at,
-                "mentor": {"id": mentor_id, "email": mentor_email},
-                "mentee": {"id": mentee_id, "email": mentee_email},
-            }
+
+@router.get("/requests/pending/detailed")
+def pending_requests_detailed(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    rows = (
+        db.query(Mentorship)
+        .options(joinedload(Mentorship.mentor), joinedload(Mentorship.mentee))
+        .filter(
+            Mentorship.mentor_user_id == user.id,
+            Mentorship.status == "pending",
         )
-
-    return out
+        .order_by(Mentorship.created_at.desc())
+        .all()
+    )
+    return [_mentorship_out(ms) for ms in rows]
 
 
 @router.get("/summary")
@@ -211,31 +257,54 @@ def mentorship_summary(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    mentees = mentor_repo.list_accepted_mentees_for_mentor(db, mentor_user_id=user.id)
-    mentors = mentor_repo.list_accepted_mentors_for_mentee(db, mentee_user_id=user.id)
+    mentees = (
+        db.query(Mentorship)
+        .options(joinedload(Mentorship.mentee))
+        .filter(
+            Mentorship.mentor_user_id == user.id,
+            Mentorship.status == "accepted",
+        )
+        .all()
+    )
+    mentors = (
+        db.query(Mentorship)
+        .options(joinedload(Mentorship.mentor))
+        .filter(
+            Mentorship.mentee_user_id == user.id,
+            Mentorship.status == "accepted",
+        )
+        .all()
+    )
 
     return {
         "user_id": user.id,
         "as_mentor": {
-            "accepted_mentees_count": len(mentees),
-            "accepted_mentees": [
-                {"mentorship_id": m.id, "mentee_user_id": m.mentee_user_id, "created_at": m.created_at}
-                for m in mentees
-            ],
+          "accepted_mentees_count": len(mentees),
+          "accepted_mentees": [
+            {
+              "mentorship_id": m.id,
+              "mentee_user_id": m.mentee_user_id,
+              "created_at": m.created_at,
+              "mentee": _user_summary(m.mentee),
+            }
+            for m in mentees
+          ],
         },
         "as_mentee": {
-            "accepted_mentors_count": len(mentors),
-            "accepted_mentors": [
-                {"mentorship_id": m.id, "mentor_user_id": m.mentor_user_id, "created_at": m.created_at}
-                for m in mentors
-            ],
+          "accepted_mentors_count": len(mentors),
+          "accepted_mentors": [
+            {
+              "mentorship_id": m.id,
+              "mentor_user_id": m.mentor_user_id,
+              "created_at": m.created_at,
+              "mentor": _user_summary(m.mentor),
+            }
+            for m in mentors
+          ],
         },
     }
 
 
-# -------------------------
-# Mentor Notes
-# -------------------------
 @router.post("/notes", response_model=MentorNoteOut)
 def create_note(
     payload: MentorNoteCreateIn,
@@ -273,18 +342,22 @@ def get_notes_for_object(
     )
 
 
-# -------------------------
-# Phase 10 missing endpoints
-# -------------------------
 @router.get("/mentees", response_model=List[MentorshipOut])
 def list_mentees(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """
-    Lists accepted mentorships where current user is the mentor.
-    """
-    return mentor_repo.list_accepted_mentees_for_mentor(db, mentor_user_id=user.id)
+    rows = (
+        db.query(Mentorship)
+        .options(joinedload(Mentorship.mentor), joinedload(Mentorship.mentee))
+        .filter(
+            Mentorship.mentor_user_id == user.id,
+            Mentorship.status == "accepted",
+        )
+        .order_by(Mentorship.created_at.desc())
+        .all()
+    )
+    return [_mentorship_out(ms) for ms in rows]
 
 
 @router.get("/{mentee_user_id}/analytics")
@@ -300,24 +373,20 @@ def mentee_analytics(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """
-    Mentor-only view of a mentee's analytics (Phase 9 integration).
-    Security: only allowed if current_user is accepted mentor of mentee_user_id.
-    """
     ok = mentor_repo.is_accepted_mentor_of(db, mentor_user_id=user.id, mentee_user_id=mentee_user_id)
     if not ok:
         raise HTTPException(status_code=403, detail="Not allowed. You are not an accepted mentor for this user.")
+
+    mentee = db.get(User, mentee_user_id)
 
     t0 = datetime.utcnow()
     end_day = datetime.utcnow().date()
     end_day_str = str(end_day)
 
-    # We look further back so trends have enough history
     since_dt = datetime.utcnow() - timedelta(days=max(days, window * 2))
     range_since_dt = datetime.utcnow() - timedelta(days=days)
     start_day = range_since_dt.date()
 
-    # Auto-detect emotion keys if not provided
     if not emotions:
         discovery_rows = (
             db.query(TextAnalysis.emotions)
@@ -337,6 +406,7 @@ def mentee_analytics(
     if not emotions:
         return {
             "mentee_user_id": mentee_user_id,
+            "mentee": _user_summary(mentee),
             "mentor_user_id": user.id,
             "as_of": end_day_str,
             "range_days": days,
@@ -350,7 +420,6 @@ def mentee_analytics(
             },
         }
 
-    # ----- local helpers (mirrors your analytics.py style) -----
     def _safe_float(x: Any, default: float = 0.0) -> float:
         try:
             if x is None:
@@ -460,7 +529,6 @@ def mentee_analytics(
             return None
         return sorted(counts.items(), key=lambda x: x[1], reverse=True)[0][0]
 
-    # ----- build per type -----
     def _build_for(object_type: str) -> Dict[str, Any]:
         rows_t = (
             db.query(TextAnalysis.created_at, TextAnalysis.emotions, TextAnalysis.primary_emotion)
@@ -490,7 +558,6 @@ def mentee_analytics(
         rows_in_range = [(c, m) for (c, m, _p) in rows_t if c >= range_since_dt]
         buckets = _avg_map_for_range(rows_in_range, emotions)
         full_series = _daily_avg_series(buckets, start_day, end_day)
-
         compact = {emo: [p for p in pts if p.get("has_data")] for emo, pts in full_series.items()}
 
         today_avg = _avg_for_day_from_rows(rows_t, end_day)
@@ -514,6 +581,7 @@ def mentee_analytics(
 
     resp: Dict[str, Any] = {
         "mentee_user_id": mentee_user_id,
+        "mentee": _user_summary(mentee),
         "mentor_user_id": user.id,
         "as_of": end_day_str,
         "range_days": days,
@@ -536,6 +604,7 @@ def mentee_analytics(
         }
 
     return resp
+
 
 @router.get("/dashboard/overview")
 def mentor_dashboard_overview(

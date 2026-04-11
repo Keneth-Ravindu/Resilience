@@ -1,9 +1,24 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Literal
 
 
 MentorshipStatus = Literal["pending", "accepted", "rejected", "ended"]
+
+
+class MentorUserSummary(BaseModel):
+    id: int
+    name: str
+    email: str
+    display_name: str | None = None
+    profile_picture_url: str | None = None
+    status_text: str | None = None
+    age_range: str | None = None
+    fitness_level: str | None = None
+    role: str
+
+    class Config:
+        from_attributes = True
 
 
 class MentorshipOut(BaseModel):
@@ -12,6 +27,8 @@ class MentorshipOut(BaseModel):
     mentee_user_id: int
     status: MentorshipStatus
     created_at: datetime
+    mentor: MentorUserSummary | None = None
+    mentee: MentorUserSummary | None = None
 
     class Config:
         from_attributes = True
