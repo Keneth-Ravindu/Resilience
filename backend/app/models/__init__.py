@@ -5,3 +5,7 @@ from app.models.workout import Workout
 from app.models.text_analysis import TextAnalysis
 from .mentorship import Mentorship
 from .mentor_note import MentorNote
+from .conversation import Conversation
+from .message import Message
+from .reaction import Reaction
+from .friend_request import FriendRequest

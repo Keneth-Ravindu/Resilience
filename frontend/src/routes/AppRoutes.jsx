@@ -30,6 +30,7 @@ import CreateJournal from "../pages/user/CreateJournal";
 
 import MyProfile from "../pages/user/MyProfile";
 import FriendRequests from "../pages/user/FriendRequests";
+import Chat from "../pages/user/Chat";
 
 export default function AppRoutes() {
   return (
@@ -44,6 +45,7 @@ export default function AppRoutes() {
           <Route element={<RequireRole allow={["user", "mentor", "admin"]} />}>
             <Route path="/app/profile/:userId" element={<PublicProfile />} />
             <Route path="/app/search" element={<UserSearch />} />
+            <Route path="/app/chat" element={<Chat />} />
           </Route>
 
           <Route element={<RequireRole allow={["user"]} />}>

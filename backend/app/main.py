@@ -19,6 +19,7 @@ from app.api.users import router as users_router
 from app.api.friend_requests import router as friend_requests_router
 from app.api.reactions import router as reactions_router
 from app.api.moderation import router as moderation_router
+from app.api.chat import router as chat_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,7 +66,7 @@ app.include_router(mentors_router)
 app.include_router(friend_requests_router)
 app.include_router(reactions_router)
 app.include_router(moderation_router)
-
+app.include_router(chat_router)
 
 
 @app.get("/health")
