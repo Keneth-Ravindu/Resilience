@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../../api/client";
 
 const API_BASE_URL = "http://127.0.0.1:8000";
@@ -113,6 +113,7 @@ function ProfileJournalCard({ journal }) {
 
 export default function PublicProfile() {
   const { userId } = useParams();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -229,6 +230,10 @@ export default function PublicProfile() {
     };
   }, [userId]);
 
+  function openChat() {
+    navigate(`/app/chat?userId=${userId}`);
+  }
+
   async function sendFriendRequest() {
     try {
       setFriendActionLoading(true);
@@ -333,9 +338,19 @@ export default function PublicProfile() {
                 This is you
               </button>
             ) : friendActionState === "friends" ? (
-              <button type="button" className="btn btn-secondary" disabled>
-                Friends
-              </button>
+              <div className="quick-actions">
+                <button type="button" className="btn btn-secondary" disabled>
+                  Friends
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={openChat}
+                >
+                  Message
+                </button>
+              </div>
             ) : friendActionState === "pending_sent" ? (
               <button type="button" className="btn btn-secondary" disabled>
                 Request Sent
