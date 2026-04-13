@@ -105,7 +105,8 @@ function MessageBubble({ message, isOwn }) {
 
 export default function Chat() {
   const [searchParams] = useSearchParams();
-  const threadEndRef = useRef(null);
+  const threadRef = useRef(null);
+  const previousMessageCountRef = useRef(0);
 
   const targetUserId = searchParams.get("userId");
 
@@ -116,6 +117,7 @@ export default function Chat() {
 
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
+  const [friendSearch, setFriendSearch] = useState("");
 
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -143,7 +145,6 @@ export default function Chat() {
   async function loadFriends() {
     try {
       setFriendsLoading(true);
-
       const res = await api.get("/friend-requests/friends");
       setFriends(res.data || []);
     } catch {
@@ -175,15 +176,12 @@ export default function Chat() {
           const existing = data.find((item) => item.id === prev.id);
           if (existing) return existing;
         }
-
         return data.length > 0 ? data[0] : null;
       });
     } catch (err) {
       const detail = err?.response?.data?.detail;
       setError(
-        typeof detail === "string"
-          ? detail
-          : "Failed to load conversations."
+        typeof detail === "string" ? detail : "Failed to load conversations."
       );
       setConversations([]);
     } finally {
@@ -191,11 +189,13 @@ export default function Chat() {
     }
   }
 
-  async function loadMessages(conversationId) {
+  async function loadMessages(conversationId, { silent = false } = {}) {
     if (!conversationId) return;
 
     try {
-      setMessagesLoading(true);
+      if (!silent) {
+        setMessagesLoading(true);
+      }
       setSendError("");
 
       const res = await api.get(`/chat/conversations/${conversationId}/messages`);
@@ -207,7 +207,9 @@ export default function Chat() {
       );
       setMessages([]);
     } finally {
-      setMessagesLoading(false);
+      if (!silent) {
+        setMessagesLoading(false);
+      }
     }
   }
 
@@ -253,10 +255,11 @@ export default function Chat() {
   useEffect(() => {
     if (!activeConversation?.id) return;
 
+    previousMessageCountRef.current = 0;
     loadMessages(activeConversation.id);
 
     const intervalId = setInterval(() => {
-      loadMessages(activeConversation.id);
+      loadMessages(activeConversation.id, { silent: true });
     }, 4000);
 
     return () => clearInterval(intervalId);
@@ -271,7 +274,31 @@ export default function Chat() {
   }, [activeConversation?.id]);
 
   useEffect(() => {
-    threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const threadEl = threadRef.current;
+    if (!threadEl) return;
+
+    const previousCount = previousMessageCountRef.current;
+    const currentCount = messages.length;
+    const hasNewMessage = currentCount > previousCount;
+
+    if (!hasNewMessage) {
+      previousMessageCountRef.current = currentCount;
+      return;
+    }
+
+    const distanceFromBottom =
+      threadEl.scrollHeight - threadEl.scrollTop - threadEl.clientHeight;
+
+    const shouldAutoScroll = previousCount === 0 || distanceFromBottom < 120;
+
+    if (shouldAutoScroll) {
+      threadEl.scrollTo({
+        top: threadEl.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+
+    previousMessageCountRef.current = currentCount;
   }, [messages]);
 
   function handleUseRewrite(rewriteText) {
@@ -306,14 +333,11 @@ export default function Chat() {
 
       const res = await api.post(
         `/chat/conversations/${activeConversation.id}/messages`,
-        {
-          content: contentToSend,
-        }
+        { content: contentToSend }
       );
 
       if (res.data?.blocked) {
         const detail = res.data?.detail || {};
-
         setModerationResult(detail);
         setBlockedModalOpen(true);
         return;
@@ -341,6 +365,8 @@ export default function Chat() {
     return getDisplayName(activeConversation.other_user);
   }, [activeConversation]);
 
+  const friendSearchNormalized = friendSearch.trim().toLowerCase();
+
   const availableFriendsForNewChat = useMemo(() => {
     const existingConversationUserIds = new Set(
       conversations
@@ -348,8 +374,40 @@ export default function Chat() {
         .filter(Boolean)
     );
 
-    return friends.filter((friend) => !existingConversationUserIds.has(friend.id));
-  }, [friends, conversations]);
+    return friends.filter((friend) => {
+      if (friend.id === currentUserId) return false;
+      if (existingConversationUserIds.has(friend.id)) return false;
+
+      if (!friendSearchNormalized) return true;
+
+      const displayName = getDisplayName(friend).toLowerCase();
+      const name = (friend.name || "").toLowerCase();
+      const role = (friend.role || "").toLowerCase();
+
+      return (
+        displayName.includes(friendSearchNormalized) ||
+        name.includes(friendSearchNormalized) ||
+        role.includes(friendSearchNormalized)
+      );
+    });
+  }, [friends, conversations, currentUserId, friendSearchNormalized]);
+
+  const filteredConversations = useMemo(() => {
+    if (!friendSearchNormalized) return conversations;
+
+    return conversations.filter((conversation) => {
+      const otherUser = conversation.other_user;
+      const displayName = getDisplayName(otherUser).toLowerCase();
+      const name = (otherUser?.name || "").toLowerCase();
+      const role = (otherUser?.role || "").toLowerCase();
+
+      return (
+        displayName.includes(friendSearchNormalized) ||
+        name.includes(friendSearchNormalized) ||
+        role.includes(friendSearchNormalized)
+      );
+    });
+  }, [conversations, friendSearchNormalized]);
 
   return (
     <div className="fade-in">
@@ -369,6 +427,15 @@ export default function Chat() {
           <section className="glass-card">
             <div className="section-head">
               <h3>Start Chat</h3>
+            </div>
+
+            <div className="field">
+              <input
+                type="text"
+                placeholder="Search friends or chats..."
+                value={friendSearch}
+                onChange={(e) => setFriendSearch(e.target.value)}
+              />
             </div>
 
             {friendsLoading ? (
@@ -398,7 +465,7 @@ export default function Chat() {
           </section>
 
           <ConversationList
-            conversations={conversations}
+            conversations={filteredConversations}
             activeConversationId={activeConversation?.id}
             onSelectConversation={setActiveConversation}
             loading={conversationsLoading}
@@ -415,7 +482,9 @@ export default function Chat() {
                     {activeConversation.other_user?.role || "user"}
                   </p>
                 ) : (
-                  <p className="feed-subtitle">Select a conversation to begin.</p>
+                  <p className="feed-subtitle">
+                    Select a conversation to begin.
+                  </p>
                 )}
               </div>
             </div>
@@ -425,9 +494,11 @@ export default function Chat() {
             ) : messagesLoading ? (
               <p>Loading messages...</p>
             ) : (
-              <div className="chat-thread">
+              <div className="chat-thread" ref={threadRef}>
                 {messages.length === 0 ? (
-                  <p className="feed-meta">No messages yet. Start the conversation.</p>
+                  <p className="feed-meta">
+                    No messages yet. Start the conversation.
+                  </p>
                 ) : (
                   messages.map((message) => (
                     <MessageBubble
@@ -437,12 +508,14 @@ export default function Chat() {
                     />
                   ))
                 )}
-                <div ref={threadEndRef} />
               </div>
             )}
 
             {activeConversation ? (
-              <form onSubmit={handleSendMessage} className="form-stack chat-composer">
+              <form
+                onSubmit={handleSendMessage}
+                className="form-stack chat-composer"
+              >
                 <div className="field">
                   <label>Original Message</label>
                   <textarea
