@@ -167,3 +167,41 @@ def reject_request(
     db.commit()
 
     return {"message": "Friend request rejected"}
+
+@router.get("/friends")
+def get_friends(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    friends = (
+        db.query(FriendRequest)
+        .filter(
+            FriendRequest.status == "accepted",
+            or_(
+                FriendRequest.requester_id == current_user.id,
+                FriendRequest.receiver_id == current_user.id,
+            ),
+        )
+        .all()
+    )
+
+    result = []
+
+    for fr in friends:
+        if fr.requester_id == current_user.id:
+            friend = db.get(User, fr.receiver_id)
+        else:
+            friend = db.get(User, fr.requester_id)
+
+        if friend:
+            result.append(
+                {
+                    "id": friend.id,
+                    "name": friend.name,
+                    "display_name": friend.display_name,
+                    "profile_picture_url": friend.profile_picture_url,
+                    "role": friend.role,
+                }
+            )
+
+    return result

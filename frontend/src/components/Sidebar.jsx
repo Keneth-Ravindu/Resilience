@@ -18,6 +18,10 @@ export default function Sidebar() {
           <NavLink className="nav-link" to="/app/feed">
             Feed
           </NavLink>
+            
+          <NavLink className="nav-link" to="/app/chat">
+            Messages
+          </NavLink>
 
           <NavLink className="nav-link" to="/app/me">
             My Profile

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../api/client";
 import BlockedContentModal from "../../components/BlockedContentModal";
@@ -105,6 +105,7 @@ function MessageBubble({ message, isOwn }) {
 
 export default function Chat() {
   const [searchParams] = useSearchParams();
+  const threadEndRef = useRef(null);
 
   const targetUserId = searchParams.get("userId");
 
@@ -112,6 +113,9 @@ export default function Chat() {
 
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(true);
+
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(true);
 
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -136,6 +140,19 @@ export default function Chat() {
     }
   }
 
+  async function loadFriends() {
+    try {
+      setFriendsLoading(true);
+
+      const res = await api.get("/friend-requests/friends");
+      setFriends(res.data || []);
+    } catch {
+      setFriends([]);
+    } finally {
+      setFriendsLoading(false);
+    }
+  }
+
   async function loadConversations(preferredConversationId = null) {
     try {
       setConversationsLoading(true);
@@ -153,9 +170,14 @@ export default function Chat() {
         }
       }
 
-      if (!activeConversation && data.length > 0) {
-        setActiveConversation(data[0]);
-      }
+      setActiveConversation((prev) => {
+        if (prev?.id) {
+          const existing = data.find((item) => item.id === prev.id);
+          if (existing) return existing;
+        }
+
+        return data.length > 0 ? data[0] : null;
+      });
     } catch (err) {
       const detail = err?.response?.data?.detail;
       setError(
@@ -219,6 +241,7 @@ export default function Chat() {
   useEffect(() => {
     loadCurrentUser();
     loadConversations();
+    loadFriends();
   }, []);
 
   useEffect(() => {
@@ -228,10 +251,28 @@ export default function Chat() {
   }, [targetUserId]);
 
   useEffect(() => {
-    if (activeConversation?.id) {
+    if (!activeConversation?.id) return;
+
+    loadMessages(activeConversation.id);
+
+    const intervalId = setInterval(() => {
       loadMessages(activeConversation.id);
-    }
+    }, 4000);
+
+    return () => clearInterval(intervalId);
   }, [activeConversation?.id]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      loadConversations(activeConversation?.id || null);
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [activeConversation?.id]);
+
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   function handleUseRewrite(rewriteText) {
     if (!rewriteText) return;
@@ -287,7 +328,9 @@ export default function Chat() {
       await loadConversations(activeConversation.id);
     } catch (err) {
       const detail = err?.response?.data?.detail;
-      setSendError(typeof detail === "string" ? detail : "Failed to send message.");
+      setSendError(
+        typeof detail === "string" ? detail : "Failed to send message."
+      );
     } finally {
       setSending(false);
     }
@@ -297,6 +340,16 @@ export default function Chat() {
     if (!activeConversation?.other_user) return "Chat";
     return getDisplayName(activeConversation.other_user);
   }, [activeConversation]);
+
+  const availableFriendsForNewChat = useMemo(() => {
+    const existingConversationUserIds = new Set(
+      conversations
+        .map((conversation) => conversation.other_user?.id)
+        .filter(Boolean)
+    );
+
+    return friends.filter((friend) => !existingConversationUserIds.has(friend.id));
+  }, [friends, conversations]);
 
   return (
     <div className="fade-in">
@@ -311,8 +364,39 @@ export default function Chat() {
 
       {error ? <p className="error-text">{error}</p> : null}
 
-      <div className="profile-page-grid">
-        <aside className="profile-column-side">
+      <div className="chat-page-grid">
+        <aside className="chat-sidebar-column">
+          <section className="glass-card">
+            <div className="section-head">
+              <h3>Start Chat</h3>
+            </div>
+
+            {friendsLoading ? (
+              <p>Loading friends...</p>
+            ) : availableFriendsForNewChat.length === 0 ? (
+              <p>No new friends available to start a chat.</p>
+            ) : (
+              <div className="simple-list">
+                {availableFriendsForNewChat.map((friend) => (
+                  <button
+                    key={friend.id}
+                    type="button"
+                    className="simple-list-item conversation-list-item"
+                    onClick={() => startConversationWithUser(friend.id)}
+                  >
+                    <div className="conversation-list-item-inner">
+                      <ChatAvatar user={friend} />
+                      <div>
+                        <strong>{getDisplayName(friend)}</strong>
+                        <p className="feed-meta">{friend.role || "user"}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
           <ConversationList
             conversations={conversations}
             activeConversationId={activeConversation?.id}
@@ -321,7 +405,7 @@ export default function Chat() {
           />
         </aside>
 
-        <section className="profile-column-main">
+        <section className="chat-main-column">
           <section className="glass-card">
             <div className="profile-content-card-head">
               <div>
@@ -353,11 +437,12 @@ export default function Chat() {
                     />
                   ))
                 )}
+                <div ref={threadEndRef} />
               </div>
             )}
 
             {activeConversation ? (
-              <form onSubmit={handleSendMessage} className="form-stack">
+              <form onSubmit={handleSendMessage} className="form-stack chat-composer">
                 <div className="field">
                   <label>Original Message</label>
                   <textarea
