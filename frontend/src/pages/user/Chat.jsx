@@ -22,17 +22,23 @@ function formatMessageTime(dateValue) {
   return new Date(dateValue).toLocaleString();
 }
 
-function getConversationPreview(conversation) {
-  const preview =
-    conversation?.latest_message?.content ||
-    conversation?.last_message?.content ||
+function getConversationPreview(conversation, currentUserId) {
+  const content =
     conversation?.latest_message_content ||
-    conversation?.last_message_content ||
-    "";
+    "No messages yet.";
 
-  if (!preview) return "No messages yet.";
+  if (!conversation?.latest_message_content) {
+    return content;
+  }
 
-  return preview.length > 48 ? `${preview.slice(0, 48)}...` : preview;
+  const isOwn =
+    conversation.latest_message_sender_id === currentUserId;
+
+  const prefix = isOwn ? "You: " : "";
+
+  return content.length > 48
+    ? `${prefix}${content.slice(0, 48)}...`
+    : `${prefix}${content}`;
 }
 
 function ChatAvatar({ user }) {
@@ -58,6 +64,7 @@ function ConversationList({
   activeConversationId,
   onSelectConversation,
   loading,
+  currentUserId,
 }) {
   return (
     <section className="glass-card">
@@ -91,7 +98,7 @@ function ConversationList({
                       {conversation.other_user?.role || "user"}
                     </p>
                     <p className="chat-list-preview">
-                      {getConversationPreview(conversation)}
+                      {getConversationPreview(conversation, currentUserId)}
                     </p>
                   </div>
                 </div>
@@ -112,6 +119,9 @@ function MessageBubble({ message, isOwn }) {
           isOwn ? "chat-message-bubble-own" : ""
         }`}
       >
+        <div className="chat-message-label">
+          {isOwn ? "You" : getDisplayName(message.sender)}
+        </div>
         <p>{message.content}</p>
         <span className="feed-meta">{formatMessageTime(message.created_at)}</span>
       </div>
@@ -488,6 +498,7 @@ export default function Chat() {
             activeConversationId={activeConversation?.id}
             onSelectConversation={setActiveConversation}
             loading={conversationsLoading}
+            currentUserId={currentUserId}
           />
         </aside>
 

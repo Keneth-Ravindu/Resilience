@@ -20,6 +20,9 @@ class ConversationOut(BaseModel):
     user_two_id: int
     created_at: datetime
     other_user: ChatUserSummary
+    latest_message_content: str | None = None
+    latest_message_created_at: datetime | None = None
+    latest_message_sender_id: int | None = None
 
     class Config:
         from_attributes = True

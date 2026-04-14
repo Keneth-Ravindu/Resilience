@@ -71,7 +71,9 @@ def _are_mentor_pair(db: Session, user_a_id: int, user_b_id: int) -> bool:
 def _can_chat(db: Session, user_a_id: int, user_b_id: int) -> bool:
     if user_a_id == user_b_id:
         return False
-    return _are_friends(db, user_a_id, user_b_id) or _are_mentor_pair(db, user_a_id, user_b_id)
+    return _are_friends(db, user_a_id, user_b_id) or _are_mentor_pair(
+        db, user_a_id, user_b_id
+    )
 
 
 def _normalized_pair(user_a_id: int, user_b_id: int) -> tuple[int, int]:
@@ -88,6 +90,43 @@ def _get_conversation_between(db: Session, user_a_id: int, user_b_id: int):
         )
         .first()
     )
+
+
+def _get_latest_message_for_conversation(db: Session, conversation_id: int):
+    return (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.desc(), Message.id.desc())
+        .first()
+    )
+
+
+def _build_conversation_payload(
+    db: Session,
+    conversation: Conversation,
+    current_user_id: int,
+):
+    other_user_id = (
+        conversation.user_two_id
+        if conversation.user_one_id == current_user_id
+        else conversation.user_one_id
+    )
+    other_user = db.get(User, other_user_id)
+    if not other_user:
+        return None
+
+    latest_message = _get_latest_message_for_conversation(db, conversation.id)
+
+    return {
+        "id": conversation.id,
+        "user_one_id": conversation.user_one_id,
+        "user_two_id": conversation.user_two_id,
+        "created_at": conversation.created_at,
+        "other_user": _user_summary(other_user),
+        "latest_message_content": latest_message.content if latest_message else None,
+        "latest_message_created_at": latest_message.created_at if latest_message else None,
+        "latest_message_sender_id": latest_message.sender_id if latest_message else None,
+    }
 
 
 @router.post("/start/{other_user_id}", response_model=ConversationOut)
@@ -121,13 +160,11 @@ def start_or_get_conversation(
         db.commit()
         db.refresh(conversation)
 
-    return {
-        "id": conversation.id,
-        "user_one_id": conversation.user_one_id,
-        "user_two_id": conversation.user_two_id,
-        "created_at": conversation.created_at,
-        "other_user": _user_summary(other_user),
-    }
+    payload = _build_conversation_payload(db, conversation, current_user.id)
+    if not payload:
+        raise HTTPException(status_code=404, detail="Other user not found.")
+
+    return payload
 
 
 @router.get("/conversations", response_model=list[ConversationOut])
@@ -149,24 +186,14 @@ def list_my_conversations(
 
     results = []
     for conversation in conversations:
-        other_user_id = (
-            conversation.user_two_id
-            if conversation.user_one_id == current_user.id
-            else conversation.user_one_id
-        )
-        other_user = db.get(User, other_user_id)
-        if not other_user:
-            continue
+        payload = _build_conversation_payload(db, conversation, current_user.id)
+        if payload:
+            results.append(payload)
 
-        results.append(
-            {
-                "id": conversation.id,
-                "user_one_id": conversation.user_one_id,
-                "user_two_id": conversation.user_two_id,
-                "created_at": conversation.created_at,
-                "other_user": _user_summary(other_user),
-            }
-        )
+    results.sort(
+        key=lambda item: item["latest_message_created_at"] or item["created_at"],
+        reverse=True,
+    )
 
     return results
 
