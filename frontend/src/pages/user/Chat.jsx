@@ -22,6 +22,19 @@ function formatMessageTime(dateValue) {
   return new Date(dateValue).toLocaleString();
 }
 
+function getConversationPreview(conversation) {
+  const preview =
+    conversation?.latest_message?.content ||
+    conversation?.last_message?.content ||
+    conversation?.latest_message_content ||
+    conversation?.last_message_content ||
+    "";
+
+  if (!preview) return "No messages yet.";
+
+  return preview.length > 48 ? `${preview.slice(0, 48)}...` : preview;
+}
+
 function ChatAvatar({ user }) {
   if (user?.profile_picture_url) {
     return (
@@ -72,10 +85,13 @@ function ConversationList({
               >
                 <div className="conversation-list-item-inner">
                   <ChatAvatar user={conversation.other_user} />
-                  <div>
+                  <div className="chat-list-text">
                     <strong>{getDisplayName(conversation.other_user)}</strong>
                     <p className="feed-meta">
                       {conversation.other_user?.role || "user"}
+                    </p>
+                    <p className="chat-list-preview">
+                      {getConversationPreview(conversation)}
                     </p>
                   </div>
                 </div>
@@ -400,11 +416,13 @@ export default function Chat() {
       const displayName = getDisplayName(otherUser).toLowerCase();
       const name = (otherUser?.name || "").toLowerCase();
       const role = (otherUser?.role || "").toLowerCase();
+      const preview = getConversationPreview(conversation).toLowerCase();
 
       return (
         displayName.includes(friendSearchNormalized) ||
         name.includes(friendSearchNormalized) ||
-        role.includes(friendSearchNormalized)
+        role.includes(friendSearchNormalized) ||
+        preview.includes(friendSearchNormalized)
       );
     });
   }, [conversations, friendSearchNormalized]);
@@ -453,9 +471,10 @@ export default function Chat() {
                   >
                     <div className="conversation-list-item-inner">
                       <ChatAvatar user={friend} />
-                      <div>
+                      <div className="chat-list-text">
                         <strong>{getDisplayName(friend)}</strong>
                         <p className="feed-meta">{friend.role || "user"}</p>
+                        <p className="chat-list-preview">Start a new conversation</p>
                       </div>
                     </div>
                   </button>

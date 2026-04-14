@@ -2259,3 +2259,19 @@ h4,
     grid-template-columns: 1fr;
   }
 }
+
+.chat-list-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.chat-list-preview {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
