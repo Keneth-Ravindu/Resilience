@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 
@@ -11,6 +11,7 @@ from app.models.message import Message
 from app.schemas.chat import ConversationOut, MessageCreate, MessageOut
 from app.services.security import get_current_user
 from app.services.text_analysis_service import analyze_text_preview
+from app.websocket.manager import manager
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -292,6 +293,30 @@ def send_message(
 
     sender = db.get(User, current_user.id)
 
+    message_payload = {
+        "id": message.id,
+        "conversation_id": message.conversation_id,
+        "sender_id": message.sender_id,
+        "content": message.content,
+        "created_at": message.created_at.isoformat(),
+        "sender": _user_summary(sender),
+    }
+
+    import asyncio
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(
+            manager.broadcast_to_conversation(
+                conversation.id,
+                {
+                    "type": "new_message",
+                    "message": message_payload,
+                },
+            )
+        )
+    except RuntimeError:
+        pass
+
     return {
         "blocked": False,
         "message": {
@@ -303,3 +328,19 @@ def send_message(
             "sender": _user_summary(sender),
         },
     }
+    
+@router.websocket("/ws/conversations/{conversation_id}")
+async def websocket_conversation(
+    websocket: WebSocket,
+    conversation_id: int,
+):
+    await manager.connect(conversation_id, websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            await manager.broadcast_to_conversation(conversation_id, data)
+    except WebSocketDisconnect:
+        manager.disconnect(conversation_id, websocket)
+    except Exception:
+        manager.disconnect(conversation_id, websocket)

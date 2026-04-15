@@ -132,6 +132,8 @@ function MessageBubble({ message, isOwn }) {
 export default function Chat() {
   const [searchParams] = useSearchParams();
   const threadRef = useRef(null);
+  const socketRef = useRef(null);
+
   const previousMessageCountRef = useRef(0);
 
   const targetUserId = searchParams.get("userId");
@@ -284,11 +286,66 @@ export default function Chat() {
     previousMessageCountRef.current = 0;
     loadMessages(activeConversation.id);
 
-    const intervalId = setInterval(() => {
-      loadMessages(activeConversation.id, { silent: true });
-    }, 4000);
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
 
-    return () => clearInterval(intervalId);
+    const ws = new WebSocket(
+      `ws://127.0.0.1:8000/chat/ws/conversations/${activeConversation.id}`
+    );
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data?.type === "new_message" && data?.message) {
+            setMessages((prev) => {
+              const exists = prev.some((item) => item.id === data.message.id);
+              if (exists) return prev;
+              return [...prev, data.message];
+            });
+
+            setConversations((prev) => {
+              return prev
+                .map((conversation) =>
+                  conversation.id === activeConversation.id
+                    ? {
+                        ...conversation,
+                        latest_message_content: data.message.content,
+                        latest_message_created_at: data.message.created_at,
+                        latest_message_sender_id: data.message.sender_id,
+                      }
+                    : conversation
+                )
+                .sort((a, b) => {
+                  const aTime = new Date(
+                    a.latest_message_created_at || a.created_at
+                  ).getTime();
+                  const bTime = new Date(
+                    b.latest_message_created_at || b.created_at
+                  ).getTime();
+                  return bTime - aTime;
+                });
+            });
+    }
+      } catch {
+        // ignore malformed websocket messages
+      }
+    };
+
+    ws.onclose = () => {
+      socketRef.current = null;
+    };
+
+    socketRef.current = ws;
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+    };
   }, [activeConversation?.id]);
 
   useEffect(() => {
