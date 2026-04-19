@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
+import anyio
+import asyncio
 
 from app.db.session import get_db
 from app.models.user import User
@@ -8,11 +10,12 @@ from app.models.friend_request import FriendRequest
 from app.models.mentorship import Mentorship
 from app.models.conversation import Conversation
 from app.models.message import Message
+from app.models.notification import Notification
 from app.schemas.chat import ConversationOut, MessageCreate, MessageOut
 from app.services.security import get_current_user
 from app.services.text_analysis_service import analyze_text_preview
 from app.websocket.manager import manager
-from app.models.notification import Notification
+from app.websocket.notification_manager import notification_manager
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -291,7 +294,10 @@ def send_message(
     db.add(message)
     db.commit()
     db.refresh(message)
-    
+
+    sender = db.get(User, current_user.id)
+
+    # Create notification for receiver
     notification = Notification(
         user_id=other_user_id,
         triggered_by_user_id=current_user.id,
@@ -299,35 +305,60 @@ def send_message(
         reference_id=conversation.id,
         is_read=False,
     )
-
     db.add(notification)
     db.commit()
+    db.refresh(notification)
 
-    sender = db.get(User, current_user.id)
+    actor = db.get(User, current_user.id)
 
+    notification_payload = {
+        "id": notification.id,
+        "user_id": notification.user_id,
+        "triggered_by_user_id": notification.triggered_by_user_id,
+        "triggered_by_user": {
+            "id": actor.id,
+            "display_name": actor.display_name,
+            "name": actor.name,
+            "profile_picture_url": actor.profile_picture_url,
+        },
+        "type": notification.type,
+        "reference_id": notification.reference_id,
+        "is_read": notification.is_read,
+        "created_at": notification.created_at.isoformat()
+        if notification.created_at
+        else None,
+    }
+
+    try:
+        anyio.from_thread.run(
+            notification_manager.send_to_user,
+            other_user_id,
+            notification_payload,
+        )
+    except Exception as err:
+        print("CHAT NOTIFICATION WS ERROR:", err)
+
+    # Broadcast new message to open chat windows
     message_payload = {
         "id": message.id,
         "conversation_id": message.conversation_id,
         "sender_id": message.sender_id,
         "content": message.content,
-        "created_at": message.created_at.isoformat(),
+        "created_at": message.created_at.isoformat() if message.created_at else None,
         "sender": _user_summary(sender),
     }
 
-    import asyncio
     try:
-        loop = asyncio.get_running_loop()
-        loop.create_task(
-            manager.broadcast_to_conversation(
-                conversation.id,
-                {
-                    "type": "new_message",
-                    "message": message_payload,
-                },
-            )
+        anyio.from_thread.run(
+            manager.broadcast_to_conversation,
+            conversation.id,
+            {
+                "type": "new_message",
+                "message": message_payload,
+            },
         )
-    except RuntimeError:
-        pass
+    except Exception as err:
+        print("CHAT MESSAGE WS ERROR:", err)
 
     return {
         "blocked": False,
@@ -340,7 +371,8 @@ def send_message(
             "sender": _user_summary(sender),
         },
     }
-    
+
+
 @router.websocket("/ws/conversations/{conversation_id}")
 async def websocket_conversation(
     websocket: WebSocket,
@@ -350,8 +382,7 @@ async def websocket_conversation(
 
     try:
         while True:
-            data = await websocket.receive_json()
-            await manager.broadcast_to_conversation(conversation_id, data)
+            await websocket.receive_json()
     except WebSocketDisconnect:
         manager.disconnect(conversation_id, websocket)
     except Exception:

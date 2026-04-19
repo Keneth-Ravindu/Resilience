@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+import anyio
 
 from app.db.session import get_db
 from app.models.reaction import Reaction
@@ -9,7 +10,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.schemas.reaction import ReactionCreate
 from app.services.security import get_current_user
-
+from app.websocket.notification_manager import notification_manager
 
 router = APIRouter(prefix="/reactions", tags=["reactions"])
 
@@ -95,6 +96,33 @@ def react(
             )
             db.add(notification)
             db.commit()
+            db.refresh(notification)
+
+            try:
+                actor = db.get(User, user.id)
+
+                anyio.from_thread.run(
+                    notification_manager.send_to_user,
+                    owner_id,
+                    {
+                        "id": notification.id,
+                        "user_id": notification.user_id,
+                        "triggered_by_user_id": notification.triggered_by_user_id,
+                        "triggered_by_user": {
+                            "id": actor.id,
+                            "display_name": actor.display_name,
+                            "name": actor.name,
+                            "profile_picture_url": actor.profile_picture_url,
+                        },
+                        "type": notification.type,
+                        "reference_id": notification.reference_id,
+                        "is_read": notification.is_read,
+                        "created_at": notification.created_at.isoformat() if notification.created_at else None,
+                    },
+                )
+            except Exception as err:
+                # fallback if websocket push fails
+                print("REACTION NOTIFICATION WS ERROR:", err)
 
         return {"action": "created"}
 
@@ -102,7 +130,6 @@ def react(
     if existing.reaction_type == reaction_type:
         db.delete(existing)
         db.commit()
-
         return {"action": "removed"}
 
     # update reaction

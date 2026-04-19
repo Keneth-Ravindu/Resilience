@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+import anyio
 
 from app.db.session import get_db
 from app.models.post import Comment, Post
@@ -9,6 +10,7 @@ from app.services.security import get_current_user
 from app.repositories.text_analysis_repo import get_latest_analysis_for_object
 from app.schemas.text_analysis import TextAnalysisOut
 from app.schemas.comment import CommentCreate, CommentOut
+from app.websocket.notification_manager import notification_manager
 
 router = APIRouter(prefix="/comments", tags=["comments"])
 
@@ -49,6 +51,33 @@ def create_comment(
         )
         db.add(notification)
         db.commit()
+        db.refresh(notification)
+
+        try:
+            actor = db.get(User, user.id)
+
+            anyio.from_thread.run(
+                notification_manager.send_to_user,
+                post.user_id,
+                {
+                    "id": notification.id,
+                    "user_id": notification.user_id,
+                    "triggered_by_user_id": notification.triggered_by_user_id,
+                    "triggered_by_user": {
+                        "id": actor.id,
+                        "display_name": actor.display_name,
+                        "name": actor.name,
+                        "profile_picture_url": actor.profile_picture_url,
+                    },
+                    "type": notification.type,
+                    "reference_id": notification.reference_id,
+                    "is_read": notification.is_read,
+                    "created_at": notification.created_at.isoformat() if notification.created_at else None,
+                },
+            )
+        except Exception as err:
+            # Keep comment creation working even if websocket push fails
+            print("COMMENT NOTIFICATION WS ERROR:", err)
 
     return comment
 

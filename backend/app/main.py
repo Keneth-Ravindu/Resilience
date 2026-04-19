@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 
-# ✅ Import all routers
+
 from app.api.auth import router as auth_router
 from app.api.posts import router as posts_router
 from app.api.journals import router as journals_router
@@ -22,9 +22,9 @@ from app.api.friend_requests import router as friend_requests_router
 from app.api.reactions import router as reactions_router
 from app.api.moderation import router as moderation_router
 from app.api.chat import router as chat_router
-
-# 🔔 NEW: Notifications router
 from app.api.notifications import router as notifications_router
+from fastapi import WebSocket, WebSocketDisconnect
+from app.websocket.notification_manager import notification_manager
 
 
 logging.basicConfig(
@@ -59,7 +59,6 @@ POST_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 # Serve uploaded files
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
-# ✅ Register all routers
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(posts_router)
@@ -74,10 +73,16 @@ app.include_router(friend_requests_router)
 app.include_router(reactions_router)
 app.include_router(moderation_router)
 app.include_router(chat_router)
-
-# 🔔 NEW: Notifications router registration
 app.include_router(notifications_router)
 
+@app.websocket("/ws/notifications/{user_id}")
+async def notifications_websocket(websocket: WebSocket, user_id: int):
+    await notification_manager.connect(user_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        notification_manager.disconnect(user_id, websocket)
 
 @app.get("/health")
 def health_check():

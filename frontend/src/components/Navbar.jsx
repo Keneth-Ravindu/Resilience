@@ -66,6 +66,7 @@ export default function Navbar() {
   const searchBoxRef = useRef(null);
   const notificationBoxRef = useRef(null);
   const debounceRef = useRef(null);
+  const notificationSocketRef = useRef(null);
 
   async function loadNotifications() {
     try {
@@ -112,7 +113,6 @@ export default function Navbar() {
 
       if (notification.type === "workout") {
         navigate("/app/feed");
-        return;
       }
     } catch (err) {
       console.error("Notification click failed", err);
@@ -143,6 +143,54 @@ export default function Navbar() {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/notifications/${user.id}`);
+    notificationSocketRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("Notification WebSocket connected");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        setNotifications((prev) => {
+          const alreadyExists = prev.some((item) => item.id === data.id);
+          if (alreadyExists) return prev;
+          return [data, ...prev];
+        });
+      } catch (err) {
+        console.error("Failed to parse notification payload", err);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error("Notification WebSocket error", err);
+    };
+
+    ws.onclose = () => {
+      console.log("Notification WebSocket disconnected");
+      notificationSocketRef.current = null;
+    };
+
+    const heartbeat = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send("ping");
+      }
+    }, 20000);
+
+    return () => {
+      clearInterval(heartbeat);
+      if (notificationSocketRef.current) {
+        notificationSocketRef.current.close();
+        notificationSocketRef.current = null;
+      }
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     function handleClickOutside(event) {
