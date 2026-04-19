@@ -31,6 +31,7 @@ import CreateJournal from "../pages/user/CreateJournal";
 import MyProfile from "../pages/user/MyProfile";
 import FriendRequests from "../pages/user/FriendRequests";
 import Chat from "../pages/user/Chat";
+import PostDetails from "../pages/user/PostDetails";
 
 export default function AppRoutes() {
   return (
@@ -58,6 +59,7 @@ export default function AppRoutes() {
             <Route path="/app/analytics" element={<AnalyticsOverview />} />
             <Route path="/app/settings" element={<Settings />} />
             <Route path="/app/friend-requests" element={<FriendRequests />} />
+            <Route path="/app/post/:postId" element={<PostDetails />} />
           </Route>
 
           <Route element={<RequireRole allow={["mentor"]} />}>

@@ -10,3 +10,4 @@ from app.models import *
 
 from app.models.friend_request import FriendRequest
 from app.models.reaction import Reaction
+from app.models.notification import Notification

@@ -6,8 +6,10 @@ from app.models.reaction import Reaction
 from app.models.post import Post, Comment
 from app.models.journal import JournalEntry
 from app.models.user import User
+from app.models.notification import Notification
 from app.schemas.reaction import ReactionCreate
 from app.services.security import get_current_user
+
 
 router = APIRouter(prefix="/reactions", tags=["reactions"])
 
@@ -15,21 +17,30 @@ ALLOWED_OBJECT_TYPES = {"post", "comment", "journal"}
 ALLOWED_REACTION_TYPES = {"like", "love", "fire", "strong", "clap", "support"}
 
 
-def validate_target(db: Session, object_type: str, object_id: int):
+def get_target(db: Session, object_type: str, object_id: int):
     if object_type == "post":
         target = db.get(Post, object_id)
-
     elif object_type == "comment":
         target = db.get(Comment, object_id)
-
     elif object_type == "journal":
         target = db.get(JournalEntry, object_id)
-
     else:
         target = None
 
     if not target:
         raise HTTPException(status_code=404, detail="Target object not found")
+
+    return target
+
+
+def get_target_owner_id(target, object_type: str) -> int | None:
+    if object_type == "post":
+        return target.user_id
+    if object_type == "comment":
+        return target.user_id
+    if object_type == "journal":
+        return target.user_id
+    return None
 
 
 @router.post("/react")
@@ -38,7 +49,6 @@ def react(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-
     object_type = payload.object_type.strip().lower()
     reaction_type = payload.reaction_type.strip().lower()
 
@@ -48,7 +58,8 @@ def react(
     if reaction_type not in ALLOWED_REACTION_TYPES:
         raise HTTPException(status_code=400, detail="Invalid reaction type")
 
-    validate_target(db, object_type, payload.object_id)
+    target = get_target(db, object_type, payload.object_id)
+    owner_id = get_target_owner_id(target, object_type)
 
     existing = (
         db.query(Reaction)
@@ -72,6 +83,18 @@ def react(
         db.add(reaction)
         db.commit()
         db.refresh(reaction)
+
+        # create notification for target owner
+        if owner_id and owner_id != user.id:
+            notification = Notification(
+                user_id=owner_id,
+                triggered_by_user_id=user.id,
+                type="like",
+                reference_id=payload.object_id,
+                is_read=False,
+            )
+            db.add(notification)
+            db.commit()
 
         return {"action": "created"}
 

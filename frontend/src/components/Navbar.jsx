@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import api from "../api/client";
 import logo from "../assets/logo.png";
@@ -17,8 +17,39 @@ function getDisplayName(user) {
   return user.display_name || user.name || `User #${user.id}`;
 }
 
+function getNotificationText(notification) {
+  const actorName =
+    notification.triggered_by_user?.display_name ||
+    notification.triggered_by_user?.name ||
+    `User ${notification.triggered_by_user_id}`;
+
+  if (notification.type === "message") {
+    return `${actorName} sent you a message`;
+  }
+
+  if (notification.type === "like") {
+    return `${actorName} liked your post`;
+  }
+
+  if (notification.type === "comment") {
+    return `${actorName} commented on your post`;
+  }
+
+  if (notification.type === "workout") {
+    return `${actorName} shared a workout`;
+  }
+
+  return `${actorName} interacted with your content`;
+}
+
+function formatNotificationTime(dateValue) {
+  if (!dateValue) return "";
+  return new Date(dateValue).toLocaleString();
+}
+
 export default function Navbar() {
   const { role, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
   const [query, setQuery] = useState("");
@@ -28,8 +59,65 @@ export default function Navbar() {
   const [friendStates, setFriendStates] = useState({});
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationLoading, setNotificationLoading] = useState(false);
+
   const searchBoxRef = useRef(null);
+  const notificationBoxRef = useRef(null);
   const debounceRef = useRef(null);
+
+  async function loadNotifications() {
+    try {
+      setNotificationLoading(true);
+      const res = await api.get("/notifications");
+      setNotifications(res.data || []);
+    } catch {
+      setNotifications([]);
+    } finally {
+      setNotificationLoading(false);
+    }
+  }
+
+  async function markAllNotificationsAsRead() {
+    try {
+      await api.post("/notifications/read-all");
+      setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+    } catch (err) {
+      console.error("Failed to mark all notifications as read", err);
+    }
+  }
+
+  async function handleNotificationClick(notification) {
+    try {
+      await api.post(`/notifications/read/${notification.id}`);
+
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.id === notification.id ? { ...item, is_read: true } : item
+        )
+      );
+
+      setShowNotifications(false);
+
+      if (notification.type === "message") {
+        navigate(`/app/chat?userId=${notification.triggered_by_user_id}`);
+        return;
+      }
+
+      if (notification.type === "comment" || notification.type === "like") {
+        navigate(`/app/post/${notification.reference_id}`);
+        return;
+      }
+
+      if (notification.type === "workout") {
+        navigate("/app/feed");
+        return;
+      }
+    } catch (err) {
+      console.error("Notification click failed", err);
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -47,9 +135,26 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    loadNotifications();
+
+    const intervalId = setInterval(() => {
+      loadNotifications();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     function handleClickOutside(event) {
       if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+
+      if (
+        notificationBoxRef.current &&
+        !notificationBoxRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
       }
     }
 
@@ -197,13 +302,17 @@ export default function Navbar() {
 
   const displayName = user?.display_name || user?.name || "User";
 
+  const unreadNotificationCount = useMemo(
+    () => notifications.filter((item) => !item.is_read).length,
+    [notifications]
+  );
+
   return (
     <header className="topbar">
       <div className="brand-wrap">
         <img src={logo} alt="Resilience Logo" className="navbar-logo" />
         <div>
           <h1 className="brand-title">Resilience</h1>
-          {/* <p className="brand-subtitle">emotion intelligence platform</p> */}
         </div>
       </div>
 
@@ -330,6 +439,76 @@ export default function Navbar() {
       )}
 
       <div className="topbar-actions">
+        <div className="navbar-notification-wrap" ref={notificationBoxRef}>
+          <button
+            type="button"
+            className="navbar-notification-btn"
+            onClick={() => setShowNotifications((prev) => !prev)}
+            aria-label="Notifications"
+          >
+            <span className="navbar-notification-icon">🔔</span>
+            {unreadNotificationCount > 0 ? (
+              <span className="navbar-notification-badge">
+                {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+              </span>
+            ) : null}
+          </button>
+
+          {showNotifications ? (
+            <div className="navbar-notification-dropdown glass-card">
+              <div className="navbar-notification-head">
+                <h3>Notifications</h3>
+
+                {notifications.length > 0 ? (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={markAllNotificationsAsRead}
+                  >
+                    Mark all as read
+                  </button>
+                ) : null}
+              </div>
+
+              {notificationLoading ? (
+                <p className="navbar-search-empty">Loading notifications...</p>
+              ) : notifications.length === 0 ? (
+                <p className="navbar-search-empty">No notifications yet.</p>
+              ) : (
+                <div className="navbar-notification-list">
+                  {notifications.map((notification) => (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      className={`navbar-notification-item ${
+                        notification.is_read ? "" : "navbar-notification-item-unread"
+                      }`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="navbar-notification-item-top">
+                        <span className="navbar-notification-type">
+                          {notification.type}
+                        </span>
+                        {!notification.is_read ? (
+                          <span className="navbar-notification-dot" />
+                        ) : null}
+                      </div>
+
+                      <p className="navbar-notification-text">
+                        {getNotificationText(notification)}
+                      </p>
+
+                      <p className="navbar-notification-time">
+                        {formatNotificationTime(notification.created_at)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+
         <div className="navbar-user">
           {user?.profile_picture_url ? (
             <img

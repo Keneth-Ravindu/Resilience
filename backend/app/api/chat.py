@@ -12,6 +12,7 @@ from app.schemas.chat import ConversationOut, MessageCreate, MessageOut
 from app.services.security import get_current_user
 from app.services.text_analysis_service import analyze_text_preview
 from app.websocket.manager import manager
+from app.models.notification import Notification
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -290,6 +291,17 @@ def send_message(
     db.add(message)
     db.commit()
     db.refresh(message)
+    
+    notification = Notification(
+        user_id=other_user_id,
+        triggered_by_user_id=current_user.id,
+        type="message",
+        reference_id=conversation.id,
+        is_read=False,
+    )
+
+    db.add(notification)
+    db.commit()
 
     sender = db.get(User, current_user.id)
 
