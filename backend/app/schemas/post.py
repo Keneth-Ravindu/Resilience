@@ -40,9 +40,11 @@ class PostOut(BaseModel):
 
     author: AuthorInfo
 
-    # NEW — reaction system
+    
     reaction_counts: dict[str, int] | None = None
     total_reactions: int | None = None
+    
+    workout_data: list[dict] | None = None
 
     class Config:
         from_attributes = True

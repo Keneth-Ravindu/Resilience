@@ -102,6 +102,33 @@ function MediaPreview({ mediaUrl, mediaType }) {
   return null;
 }
 
+function WorkoutSection({ workoutData }) {
+  if (!workoutData || workoutData.length === 0) return null;
+
+  return (
+    <div className="workout-section">
+      <h4 className="workout-title">Detected Workout</h4>
+
+      <div className="workout-grid">
+        {workoutData.map((exercise, index) => (
+          <div className="workout-card" key={`${exercise.name}-${index}`}>
+            <div className="workout-image-wrap">
+              <img
+                src={exercise.image}
+                alt={exercise.name}
+                className="workout-image"
+              />
+            </div>
+
+            <p className="workout-name">{exercise.name}</p>
+            <span className="workout-muscle">{exercise.muscle}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PostAnalysisSection({ postId }) {
   const [expanded, setExpanded] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -667,6 +694,8 @@ export default function Feed() {
                 mediaUrl={post.media_url}
                 mediaType={post.media_type}
               />
+
+              <WorkoutSection workoutData={post.workout_data} />
 
               <ReactionButton
                 objectType="post"

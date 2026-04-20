@@ -28,6 +28,77 @@ ALLOWED_VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 MAX_VIDEO_SIZE = 50 * 1024 * 1024
 
+# ---------------------------
+# Workout Detection
+# ---------------------------
+
+EXERCISE_DB = {
+    "bench press": {
+        "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80",
+        "muscle": "chest",
+    },
+    "squat": {
+        "image": "https://images.unsplash.com/photo-1434596922112-19c563067271?auto=format&fit=crop&w=600&q=80",
+        "muscle": "legs",
+    },
+    "deadlift": {
+        "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+        "muscle": "back",
+    },
+    "shoulder press": {
+        "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80",
+        "muscle": "shoulders",
+    },
+    "bicep curl": {
+        "image": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80",
+        "muscle": "arms",
+    },
+    "tricep pushdown": {
+        "image": "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?auto=format&fit=crop&w=600&q=80",
+        "muscle": "arms",
+    },
+}
+
+EXERCISE_ALIASES = {
+    "bench": "bench press",
+    "bench presses": "bench press",
+    "squats": "squat",
+    "deadlifts": "deadlift",
+    "shoulder presses": "shoulder press",
+    "curls": "bicep curl",
+    "tricep pushdowns": "tricep pushdown",
+}
+
+
+def extract_workout_data(text: str):
+    text_lower = (text or "").lower()
+    found = []
+
+    for name, data in EXERCISE_DB.items():
+        if name in text_lower:
+            found.append(
+                {
+                    "name": name,
+                    "image": data["image"],
+                    "muscle": data["muscle"],
+                }
+            )
+
+    for alias, actual_name in EXERCISE_ALIASES.items():
+        if alias in text_lower:
+            already_found = any(item["name"] == actual_name for item in found)
+            if not already_found and actual_name in EXERCISE_DB:
+                data = EXERCISE_DB[actual_name]
+                found.append(
+                    {
+                        "name": actual_name,
+                        "image": data["image"],
+                        "muscle": data["muscle"],
+                    }
+                )
+
+    return found
+
 
 def _get_file_extension(filename: str) -> str:
     return Path(filename).suffix.lower()
@@ -162,6 +233,8 @@ def create_post(
         raise HTTPException(status_code=400, detail="media_url is required when media_type is provided")
     
     _enforce_safe_text(payload.content, payload.used_rewrite)
+    
+    workout_data = extract_workout_data(payload.content)
 
     post = Post(
         user_id=user.id,
@@ -169,6 +242,7 @@ def create_post(
         media_url=payload.media_url,
         media_type=media_type,
         tags=payload.tags,
+        workout_data=workout_data if workout_data else None,
     )
 
     db.add(post)
