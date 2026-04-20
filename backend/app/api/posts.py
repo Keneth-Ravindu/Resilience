@@ -16,7 +16,6 @@ from app.services.text_analysis_service import analyze_and_store_text
 from app.repositories.text_analysis_repo import get_latest_analysis_for_object
 from app.services.text_analysis_service import analyze_text_preview
 
-
 router = APIRouter(prefix="/posts", tags=["posts"])
 logger = logging.getLogger(__name__)
 
@@ -34,27 +33,27 @@ MAX_VIDEO_SIZE = 50 * 1024 * 1024
 
 EXERCISE_DB = {
     "bench press": {
-        "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80",
+        "image": "/static/workouts/bench_press.jpg",
         "muscle": "chest",
     },
     "squat": {
-        "image": "https://images.unsplash.com/photo-1434596922112-19c563067271?auto=format&fit=crop&w=600&q=80",
+        "image": "/static/workouts/squat.jpg",
         "muscle": "legs",
     },
     "deadlift": {
-        "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+        "image": "/static/workouts/deadlift_1.jpg",
         "muscle": "back",
     },
     "shoulder press": {
-        "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80",
+        "image": "/static/workouts/shoulder_press.jpg",
         "muscle": "shoulders",
     },
     "bicep curl": {
-        "image": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80",
+        "image": "/static/workouts/bicep_curl.jpg",
         "muscle": "arms",
     },
     "tricep pushdown": {
-        "image": "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?auto=format&fit=crop&w=600&q=80",
+        "image": "/static/workouts/tricep_pushdown.jpg",
         "muscle": "arms",
     },
 }
@@ -66,6 +65,7 @@ EXERCISE_ALIASES = {
     "deadlifts": "deadlift",
     "shoulder presses": "shoulder press",
     "curls": "bicep curl",
+    "bicep curls": "bicep curl",
     "tricep pushdowns": "tricep pushdown",
 }
 
@@ -110,6 +110,7 @@ def _detect_media_type(content_type: str) -> str | None:
     if content_type in ALLOWED_VIDEO_TYPES:
         return "video"
     return None
+
 
 def _enforce_safe_text(text: str, used_rewrite: bool = False):
     result = analyze_text_preview(text)
@@ -231,9 +232,9 @@ def create_post(
 
     if media_type and not payload.media_url:
         raise HTTPException(status_code=400, detail="media_url is required when media_type is provided")
-    
+
     _enforce_safe_text(payload.content, payload.used_rewrite)
-    
+
     workout_data = extract_workout_data(payload.content)
 
     post = Post(
@@ -247,6 +248,7 @@ def create_post(
 
     db.add(post)
     db.commit()
+    db.refresh(post)
 
     post = (
         db.query(Post)
@@ -373,7 +375,7 @@ def add_comment(
     post = db.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    
+
     _enforce_safe_text(payload.content, payload.used_rewrite)
 
     comment = Comment(
@@ -384,6 +386,7 @@ def add_comment(
 
     db.add(comment)
     db.commit()
+    db.refresh(comment)
 
     comment = (
         db.query(Comment)

@@ -67,13 +67,13 @@ body::-webkit-scrollbar-track,
 
 body::-webkit-scrollbar-thumb,
 .page-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 0, 0, 0.13);
   border-radius: 999px;
 }
 
 body::-webkit-scrollbar-thumb:hover,
 .page-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 59, 48, 0.3);
+  background: rgba(255, 13, 0, 0.3);
 }
 
 a {
@@ -2491,4 +2491,62 @@ h4,
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.workout-section {
+  margin-top: 12px;
+}
+
+.workout-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #f5f5f5;
+}
+
+.workout-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.workout-card {
+  width: 120px;
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.2s ease;
+}
+
+.workout-card:hover {
+  transform: translateY(-4px);
+}
+
+.workout-image-wrap {
+  width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.workout-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.workout-info {
+  text-align: center;
+}
+
+.workout-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workout-muscle {
+  font-size: 10px;
+  color: #e9e9e9;
 }

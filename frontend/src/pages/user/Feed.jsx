@@ -107,21 +107,28 @@ function WorkoutSection({ workoutData }) {
 
   return (
     <div className="workout-section">
-      <h4 className="workout-title">Detected Workout</h4>
+      <p className="workout-title"></p>
 
       <div className="workout-grid">
-        {workoutData.map((exercise, index) => (
-          <div className="workout-card" key={`${exercise.name}-${index}`}>
+        {workoutData.map((exercise, idx) => (
+          <div className="workout-card" key={idx}>
             <div className="workout-image-wrap">
               <img
-                src={exercise.image}
+                src={resolveMediaUrl(exercise.image)}
                 alt={exercise.name}
                 className="workout-image"
               />
             </div>
 
-            <p className="workout-name">{exercise.name}</p>
-            <span className="workout-muscle">{exercise.muscle}</span>
+            <div className="workout-info">
+              <p className="workout-name">
+                {exercise.name.toUpperCase()}
+              </p>
+
+              <span className="workout-muscle">
+                {exercise.muscle}
+              </span>
+            </div>
           </div>
         ))}
       </div>

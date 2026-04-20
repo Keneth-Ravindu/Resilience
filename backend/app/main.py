@@ -25,6 +25,7 @@ from app.api.chat import router as chat_router
 from app.api.notifications import router as notifications_router
 from fastapi import WebSocket, WebSocketDisconnect
 from app.websocket.notification_manager import notification_manager
+from fastapi.staticfiles import StaticFiles
 
 
 logging.basicConfig(
@@ -58,6 +59,7 @@ POST_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Serve uploaded files
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(auth_router)
 app.include_router(users_router)
