@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Text, Integer, JSON, String
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -53,6 +53,11 @@ class Post(Base):
         "Comment",
         back_populates="post",
         cascade="all, delete-orphan"
+    )
+    
+    workout_data = Column(
+        JSON, 
+        nullable=True
     )
 
 

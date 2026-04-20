@@ -136,12 +136,6 @@ export default function Navbar() {
 
   useEffect(() => {
     loadNotifications();
-
-    const intervalId = setInterval(() => {
-      loadNotifications();
-    }, 5000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
