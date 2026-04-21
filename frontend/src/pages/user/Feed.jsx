@@ -107,11 +107,11 @@ function WorkoutSection({ workoutData }) {
 
   return (
     <div className="workout-section">
-      <p className="workout-title"></p>
+      <p className="workout-title">💪 Workout Summary</p>
 
       <div className="workout-grid">
         {workoutData.map((exercise, idx) => (
-          <div className="workout-card" key={idx}>
+          <div className="workout-card" key={`${exercise.name}-${idx}`}>
             <div className="workout-image-wrap">
               <img
                 src={resolveMediaUrl(exercise.image)}
@@ -121,13 +121,28 @@ function WorkoutSection({ workoutData }) {
             </div>
 
             <div className="workout-info">
-              <p className="workout-name">
-                {exercise.name.toUpperCase()}
-              </p>
+              <p className="workout-name">{exercise.name.toUpperCase()}</p>
+              <span className="workout-muscle">{exercise.muscle}</span>
 
-              <span className="workout-muscle">
-                {exercise.muscle}
-              </span>
+              <div className="workout-metrics">
+                {exercise.sets ? (
+                  <span className="workout-metric-chip">
+                    {exercise.sets} sets
+                  </span>
+                ) : null}
+
+                {exercise.reps ? (
+                  <span className="workout-metric-chip">
+                    {exercise.reps} reps
+                  </span>
+                ) : null}
+
+                {exercise.weight ? (
+                  <span className="workout-metric-chip">
+                    {exercise.weight}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
         ))}
@@ -671,6 +686,13 @@ export default function Feed() {
                       <span className="post-meta-dot">•</span>
 
                       <span className="feed-subtitle">Post #{post.id}</span>
+
+                      {post.workout_data?.length ? (
+                        <>
+                          <span className="post-meta-dot">•</span>
+                          <span className="workout-post-badge">Workout Post</span>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -702,7 +724,14 @@ export default function Feed() {
                 mediaType={post.media_type}
               />
 
-              <WorkoutSection workoutData={post.workout_data} />
+              {post.workout_data?.length ? (
+                <div className="workout-post-highlight">
+                  <p className="workout-post-highlight-text">
+                    Structured workout detected from this post
+                  </p>
+                  <WorkoutSection workoutData={post.workout_data} />
+                </div>
+              ) : null}
 
               <ReactionButton
                 objectType="post"

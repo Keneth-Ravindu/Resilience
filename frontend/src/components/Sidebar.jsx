@@ -70,6 +70,10 @@ export default function Sidebar() {
             <NavLink className="nav-link" to="/mentor/mentees">
               Mentees
             </NavLink>
+
+            <NavLink className="nav-link" to="/app/chat">
+              Messages
+            </NavLink>
           </>
         )}
 

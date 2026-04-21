@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 import logging
 import shutil
+import re
 
 from app.db.session import get_db
 from app.models.post import Post, Comment
@@ -44,12 +45,12 @@ EXERCISE_DB = {
         "image": "/static/workouts/deadlift_1.jpg",
         "muscle": "back",
     },
-    "shoulder press": {
-        "image": "/static/workouts/shoulder_press.jpg",
-        "muscle": "shoulders",
+    "incline dumbbell bench press": {
+        "image": "/static/workouts/incline_dumbbell_bench_press.jpg",
+        "muscle": "chest",
     },
     "bicep curl": {
-        "image": "/static/workouts/bicep_curl.jpg",
+        "image": "/static/workouts/barbell_bicep_curl.jpg",
         "muscle": "arms",
     },
     "tricep pushdown": {
@@ -63,37 +64,104 @@ EXERCISE_ALIASES = {
     "bench presses": "bench press",
     "squats": "squat",
     "deadlifts": "deadlift",
-    "shoulder presses": "shoulder press",
+    "incline db bench press": "incline dumbbell bench press",
+    "incline dumbbell press": "incline dumbbell bench press",
+    "db incline bench": "incline dumbbell bench press",
     "curls": "bicep curl",
     "bicep curls": "bicep curl",
     "tricep pushdowns": "tricep pushdown",
 }
 
 
-def extract_workout_data(text: str):
+def normalize_workout_text(text: str) -> str:
     text_lower = (text or "").lower()
-    found = []
-
-    for name, data in EXERCISE_DB.items():
-        if name in text_lower:
-            found.append(
-                {
-                    "name": name,
-                    "image": data["image"],
-                    "muscle": data["muscle"],
-                }
-            )
 
     for alias, actual_name in EXERCISE_ALIASES.items():
-        if alias in text_lower:
-            already_found = any(item["name"] == actual_name for item in found)
-            if not already_found and actual_name in EXERCISE_DB:
-                data = EXERCISE_DB[actual_name]
+        text_lower = text_lower.replace(alias, actual_name)
+
+    return text_lower
+
+
+def extract_sets_reps_weight(text: str):
+    text_lower = (text or "").lower()
+
+    sets = None
+    reps = None
+    weight = None
+
+    combo_match = re.search(r"(\d+)\s*x\s*(\d+)", text_lower)
+    if combo_match:
+        sets = int(combo_match.group(1))
+        reps = int(combo_match.group(2))
+
+    sets_match = re.search(r"(\d+)\s*sets?", text_lower)
+    if sets_match:
+        sets = int(sets_match.group(1))
+
+    reps_match = re.search(r"(\d+)\s*reps?", text_lower)
+    if reps_match:
+        reps = int(reps_match.group(1))
+
+    weight_match = re.search(r"(\d+(?:\.\d+)?)\s*(kg|kgs)", text_lower)
+    if weight_match:
+        weight = f"{weight_match.group(1)} {weight_match.group(2)}"
+
+    return {
+        "sets": sets,
+        "reps": reps,
+        "weight": weight,
+    }
+
+
+def split_workout_segments(text: str) -> list[str]:
+    normalized = normalize_workout_text(text)
+
+    segments = re.split(
+        r",|\band\b|\bthen\b|\balso\b|\bafter that\b",
+        normalized,
+    )
+
+    cleaned_segments = [segment.strip() for segment in segments if segment.strip()]
+    return cleaned_segments if cleaned_segments else [normalized]
+
+
+def extract_workout_data(text: str):
+    segments = split_workout_segments(text)
+    found = []
+    seen_names = set()
+
+    for segment in segments:
+        segment_metrics = extract_sets_reps_weight(segment)
+
+        for name, data in EXERCISE_DB.items():
+            if name in segment:
                 found.append(
                     {
-                        "name": actual_name,
+                        "name": name,
                         "image": data["image"],
                         "muscle": data["muscle"],
+                        "sets": segment_metrics["sets"],
+                        "reps": segment_metrics["reps"],
+                        "weight": segment_metrics["weight"],
+                    }
+                )
+                seen_names.add(name)
+
+    
+    if not found:
+        normalized = normalize_workout_text(text)
+        full_metrics = extract_sets_reps_weight(normalized)
+
+        for name, data in EXERCISE_DB.items():
+            if name in normalized and name not in seen_names:
+                found.append(
+                    {
+                        "name": name,
+                        "image": data["image"],
+                        "muscle": data["muscle"],
+                        "sets": full_metrics["sets"],
+                        "reps": full_metrics["reps"],
+                        "weight": full_metrics["weight"],
                     }
                 )
 
@@ -156,6 +224,19 @@ def get_reaction_counts(db: Session, object_type: str, object_id: int):
     counts = {reaction: count for reaction, count in rows}
     total = sum(counts.values())
     return counts, total
+
+
+@router.post("/preview-workout")
+def preview_workout(
+    payload: dict,
+):
+    text = (payload.get("text") or "").strip()
+
+    if not text:
+        return {"workout_data": []}
+
+    workout_data = extract_workout_data(text)
+    return {"workout_data": workout_data}
 
 
 # ---------------------------

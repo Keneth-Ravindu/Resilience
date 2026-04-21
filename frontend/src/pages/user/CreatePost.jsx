@@ -1,11 +1,76 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../api/client";
 import BlockedContentModal from "../../components/BlockedContentModal";
 import RewriteAssistBox from "../../components/RewriteAssistBox";
 
+const API_BASE_URL = "http://127.0.0.1:8000";
+
+function resolveMediaUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_BASE_URL}${url}`;
+}
+
+function WorkoutPreviewSection({ workoutPreview }) {
+  if (!workoutPreview || workoutPreview.length === 0) return null;
+
+  return (
+    <section className="glass-card workout-preview-section">
+      <div className="section-head">
+        <h3>Workout Preview</h3>
+        <p className="feed-subtitle">
+          These exercises will be attached to your post.
+        </p>
+      </div>
+
+      <div className="workout-grid">
+        {workoutPreview.map((exercise, index) => (
+          <div className="workout-card" key={`${exercise.name}-${index}`}>
+            <div className="workout-image-wrap">
+              <img
+                src={resolveMediaUrl(exercise.image)}
+                alt={exercise.name}
+                className="workout-image"
+              />
+            </div>
+
+            <div className="workout-info">
+              <p className="workout-name">{exercise.name.toUpperCase()}</p>
+              <span className="workout-muscle">{exercise.muscle}</span>
+
+              <div className="workout-metrics">
+                {exercise.sets ? (
+                  <span className="workout-metric-chip">
+                    {exercise.sets} sets
+                  </span>
+                ) : null}
+
+                {exercise.reps ? (
+                  <span className="workout-metric-chip">
+                    {exercise.reps} reps
+                  </span>
+                ) : null}
+
+                {exercise.weight ? (
+                  <span className="workout-metric-chip">
+                    {exercise.weight}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function CreatePost() {
   const [content, setContent] = useState("");
   const [finalContent, setFinalContent] = useState("");
+  const [workoutPreview, setWorkoutPreview] = useState([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState("");
   const [usedRewrite, setUsedRewrite] = useState(false);
   const [tags, setTags] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -20,6 +85,8 @@ export default function CreatePost() {
   const [checkingModeration, setCheckingModeration] = useState(false);
   const [blockedModalOpen, setBlockedModalOpen] = useState(false);
 
+  const previewDebounceRef = useRef(null);
+
   const previewUrl = useMemo(() => {
     if (!selectedFile) return null;
     return URL.createObjectURL(selectedFile);
@@ -30,10 +97,12 @@ export default function CreatePost() {
 
     setContent(rewriteText);
     setFinalContent(rewriteText);
-    setUsedRewrite(true); 
+    setUsedRewrite(true);
     setModerationResult(null);
     setBlockedModalOpen(false);
     setError("");
+    setWorkoutPreview([]);
+    setPreviewError("");
   }
 
   function showBlockedModal(result) {
@@ -103,6 +172,78 @@ export default function CreatePost() {
     }
   };
 
+  const generateWorkoutPreview = async () => {
+    const textToPreview = (finalContent || content).trim();
+
+    if (!textToPreview) {
+      setWorkoutPreview([]);
+      setPreviewError("Write some workout text first.");
+      return;
+    }
+
+    try {
+      setPreviewLoading(true);
+      setPreviewError("");
+
+      const res = await api.post("/posts/preview-workout", {
+        text: textToPreview,
+      });
+
+      setWorkoutPreview(res.data?.workout_data || []);
+
+      if (!res.data?.workout_data?.length && textToPreview.length > 10) {
+        setPreviewError("No workout exercises detected.");
+      }
+    } catch {
+      setWorkoutPreview([]);
+      setPreviewError("Failed to generate workout preview.");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const textToPreview = (finalContent || content).trim();
+
+    if (previewDebounceRef.current) {
+      clearTimeout(previewDebounceRef.current);
+    }
+
+    if (!textToPreview) {
+      setWorkoutPreview([]);
+      setPreviewError("");
+      return;
+    }
+
+    previewDebounceRef.current = setTimeout(async () => {
+      try {
+        if (!previewLoading) setPreviewLoading(true);
+        setPreviewError("");
+
+        const res = await api.post("/posts/preview-workout", {
+          text: textToPreview,
+        });
+
+        setWorkoutPreview(res.data?.workout_data || []);
+
+        if (!res.data?.workout_data?.length && textToPreview.length > 10) {
+          setPreviewError("No workout exercises detected.");
+        }
+      } catch {
+        setWorkoutPreview([]);
+        setPreviewError("Failed to generate workout preview.");
+      } finally {
+        setPreviewLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      if (previewDebounceRef.current) {
+        clearTimeout(previewDebounceRef.current);
+      }
+    };
+  }, [content, finalContent]);
+
   const submitPost = async (e) => {
     e.preventDefault();
     setModerationResult(null);
@@ -150,6 +291,8 @@ export default function CreatePost() {
       setMessage("Post created successfully.");
       setContent("");
       setFinalContent("");
+      setWorkoutPreview([]);
+      setPreviewError("");
       setTags("");
       setUsedRewrite(false);
       setSelectedFile(null);
@@ -238,6 +381,29 @@ export default function CreatePost() {
                   Otherwise, the original post content will be saved.
                 </p>
               </div>
+
+              <div className="quick-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={generateWorkoutPreview}
+                  disabled={previewLoading}
+                >
+                  {previewLoading ? "Updating Preview..." : "Workout Refresh"}
+                </button>
+              </div>
+
+              <p className="feed-meta">
+                {previewLoading
+                  ? "Detecting exercises..."
+                  : workoutPreview.length > 0
+                  ? "Live workout preview"
+                  : ""}
+              </p>
+
+              {previewError ? <p className="error-text">{previewError}</p> : null}
+
+              <WorkoutPreviewSection workoutPreview={workoutPreview} />
 
               <div className="field">
                 <label>Tags (comma separated)</label>
