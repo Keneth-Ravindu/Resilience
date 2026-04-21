@@ -350,32 +350,41 @@ export default function Navbar() {
   );
 
   return (
-    <header className="topbar">
-      <div className="brand-wrap">
-        <img src={logo} alt="Resilience Logo" className="navbar-logo" />
-        <div>
+    <header className="topbar premium-navbar">
+      <div className="brand-wrap premium-brand-wrap">
+        <div className="premium-brand-logo-shell">
+          <img src={logo} alt="Resilience Logo" className="navbar-logo" />
+        </div>
+
+        <div className="premium-brand-text">
           <h1 className="brand-title">Resilience</h1>
+          <p className="brand-subtitle premium-brand-subtitle">
+            Train. Connect. Grow.
+          </p>
         </div>
       </div>
 
       {role === "user" && (
-        <div className="navbar-search-wrap" ref={searchBoxRef}>
-          <input
-            type="text"
-            className="navbar-search-input"
-            placeholder="Search Users"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setShowDropdown(true);
-            }}
-            onFocus={() => {
-              if (query.trim()) setShowDropdown(true);
-            }}
-          />
+        <div className="navbar-search-wrap premium-search-wrap" ref={searchBoxRef}>
+          <div className="premium-search-shell">
+            <span className="premium-search-icon">⌕</span>
+            <input
+              type="text"
+              className="navbar-search-input premium-search-input"
+              placeholder="Search users, friends, mentors..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => {
+                if (query.trim()) setShowDropdown(true);
+              }}
+            />
+          </div>
 
           {showDropdown && query.trim() && (
-            <div className="navbar-search-dropdown glass-card">
+            <div className="navbar-search-dropdown glass-card premium-search-dropdown">
               {searching ? (
                 <p className="navbar-search-empty">Searching...</p>
               ) : results.length === 0 ? (
@@ -391,10 +400,13 @@ export default function Navbar() {
                     const isLoading = actionLoadingId === result.id;
 
                     return (
-                      <div key={result.id} className="navbar-search-result-card">
+                      <div
+                        key={result.id}
+                        className="navbar-search-result-card premium-search-result-card"
+                      >
                         <Link
                           to={`/app/profile/${result.id}`}
-                          className="navbar-search-result"
+                          className="navbar-search-result premium-search-result"
                           onClick={() => {
                             setShowDropdown(false);
                             setQuery("");
@@ -437,7 +449,7 @@ export default function Navbar() {
                             Request Sent
                           </button>
                         ) : relation.status === "pending_received" ? (
-                          <div className="quick-actions">
+                          <div className="quick-actions premium-search-actions">
                             <button
                               type="button"
                               className="btn btn-primary btn-sm navbar-request-btn"
@@ -480,11 +492,11 @@ export default function Navbar() {
         </div>
       )}
 
-      <div className="topbar-actions">
+      <div className="topbar-actions premium-topbar-actions">
         <div className="navbar-notification-wrap" ref={notificationBoxRef}>
           <button
             type="button"
-            className="navbar-notification-btn"
+            className="navbar-notification-btn premium-icon-btn"
             onClick={() => setShowNotifications((prev) => !prev)}
             aria-label="Notifications"
           >
@@ -497,9 +509,14 @@ export default function Navbar() {
           </button>
 
           {showNotifications ? (
-            <div className="navbar-notification-dropdown glass-card">
-              <div className="navbar-notification-head">
-                <h3>Notifications</h3>
+            <div className="navbar-notification-dropdown glass-card premium-notification-dropdown">
+              <div className="navbar-notification-head premium-notification-head">
+                <div>
+                  <h3>Notifications</h3>
+                  <p className="premium-notification-subtitle">
+                    Stay updated with activity on your profile
+                  </p>
+                </div>
 
                 {notifications.length > 0 ? (
                   <button
@@ -522,7 +539,7 @@ export default function Navbar() {
                     <button
                       key={notification.id}
                       type="button"
-                      className={`navbar-notification-item ${
+                      className={`navbar-notification-item premium-notification-item ${
                         notification.is_read ? "" : "navbar-notification-item-unread"
                       }`}
                       onClick={() => handleNotificationClick(notification)}
@@ -551,7 +568,7 @@ export default function Navbar() {
           ) : null}
         </div>
 
-        <div className="navbar-user">
+        <div className="navbar-user premium-navbar-user">
           {user?.profile_picture_url ? (
             <img
               src={resolveMediaUrl(user.profile_picture_url)}
@@ -564,12 +581,15 @@ export default function Navbar() {
             </div>
           )}
 
-          <span className="navbar-username">{displayName}</span>
+          <div className="premium-navbar-user-meta">
+            <span className="navbar-username">{displayName}</span>
+            <span className="premium-navbar-user-status">Online</span>
+          </div>
         </div>
 
         <span className="role-badge">{role}</span>
 
-        <button className="btn btn-outline" onClick={logout}>
+        <button className="btn btn-outline premium-logout-btn" onClick={logout}>
           Logout
         </button>
       </div>

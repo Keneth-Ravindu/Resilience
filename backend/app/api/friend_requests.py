@@ -28,11 +28,23 @@ def send_friend_request(
             FriendRequest.requester_id == current_user.id,
             FriendRequest.receiver_id == user_id,
         )
+        .order_by(FriendRequest.id.desc())
         .first()
     )
 
     if existing:
-        raise HTTPException(status_code=400, detail="Request already sent")
+        if existing.status == "pending":
+            raise HTTPException(status_code=400, detail="Request already sent")
+
+        if existing.status == "accepted":
+            raise HTTPException(status_code=400, detail="You are already friends")
+
+        if existing.status == "rejected":
+            existing.status = "pending"
+            existing.responded_at = None
+            db.commit()
+            db.refresh(existing)
+            return existing
 
     request = FriendRequest(
         requester_id=current_user.id,

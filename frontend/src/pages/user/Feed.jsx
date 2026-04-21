@@ -79,7 +79,7 @@ function MediaPreview({ mediaUrl, mediaType }) {
 
   if (mediaType === "image") {
     return (
-      <div className="feed-media-wrap">
+      <div className="feed-media-wrap premium-feed-media-wrap">
         <img
           src={resolveMediaUrl(mediaUrl)}
           alt="Post media"
@@ -91,7 +91,7 @@ function MediaPreview({ mediaUrl, mediaType }) {
 
   if (mediaType === "video") {
     return (
-      <div className="feed-media-wrap">
+      <div className="feed-media-wrap premium-feed-media-wrap">
         <video className="feed-media-video" controls>
           <source src={resolveMediaUrl(mediaUrl)} />
         </video>
@@ -181,7 +181,7 @@ function PostAnalysisSection({ postId }) {
   }
 
   return (
-    <div className="journal-analysis-block">
+    <div className="journal-analysis-block premium-analysis-block">
       <div className="journal-analysis-actions">
         <button
           type="button"
@@ -262,7 +262,7 @@ function CommentAnalysisSection({ commentId }) {
   }
 
   return (
-    <div className="journal-analysis-block comment-analysis-block">
+    <div className="journal-analysis-block comment-analysis-block premium-analysis-block">
       <div className="journal-analysis-actions">
         <button
           type="button"
@@ -446,10 +446,10 @@ function CommentSection({ postId }) {
   };
 
   return (
-    <div className="comment-section modern-comment-section">
-      <div className="comment-section-head">
+    <div className="comment-section modern-comment-section premium-comment-section">
+      <div className="comment-section-head premium-comment-section-head">
         <h4>Comments</h4>
-        <span>{comments.length}</span>
+        <span className="premium-comment-count">{comments.length}</span>
       </div>
 
       {loadingComments ? (
@@ -459,7 +459,7 @@ function CommentSection({ postId }) {
       ) : (
         <div className="comment-list">
           {comments.map((comment) => (
-            <div className="comment-card modern-comment-card" key={comment.id}>
+            <div className="comment-card modern-comment-card premium-comment-card" key={comment.id}>
               <div className="comment-head">
                 <div className="comment-author-wrap">
                   <Link
@@ -508,22 +508,45 @@ function CommentSection({ postId }) {
 
       <form
         onSubmit={submitComment}
-        className="comment-form modern-comment-form"
+        className="comment-form modern-comment-form premium-comment-form"
       >
-        <textarea
-          rows="2"
-          placeholder="Write a supportive comment..."
-          value={commentInput.content}
-          onChange={(e) => {
-            setCommentInput((prev) => ({
-              ...prev,
-              content: e.target.value,
-              usedRewrite: false,
-            }));
-            setModerationResult(null);
-            setError("");
-          }}
-        />
+        <div className="premium-comment-form-grid">
+          <div className="premium-comment-input-block">
+            <label className="premium-comment-label">Your comment</label>
+            <textarea
+              rows="2"
+              placeholder="Write a supportive comment..."
+              value={commentInput.content}
+              onChange={(e) => {
+                setCommentInput((prev) => ({
+                  ...prev,
+                  content: e.target.value,
+                  usedRewrite: false,
+                }));
+                setModerationResult(null);
+                setError("");
+              }}
+            />
+          </div>
+
+          <div className="premium-comment-input-block">
+            <label className="premium-comment-label">Final version</label>
+            <textarea
+              rows="3"
+              placeholder="Manual / final comment version..."
+              value={commentInput.finalContent}
+              onChange={(e) => {
+                setCommentInput((prev) => ({
+                  ...prev,
+                  finalContent: e.target.value,
+                  usedRewrite: false,
+                }));
+                setModerationResult(null);
+                setError("");
+              }}
+            />
+          </div>
+        </div>
 
         <RewriteAssistBox
           text={commentInput.content}
@@ -533,32 +556,19 @@ function CommentSection({ postId }) {
           autoTrigger={moderationResult?.is_toxic}
         />
 
-        <textarea
-          rows="3"
-          placeholder="Manual / final comment version..."
-          value={commentInput.finalContent}
-          onChange={(e) => {
-            setCommentInput((prev) => ({
-              ...prev,
-              finalContent: e.target.value,
-              usedRewrite: false,
-            }));
-            setModerationResult(null);
-            setError("");
-          }}
-        />
-
-        <button
-          className="btn btn-primary btn-sm"
-          type="submit"
-          disabled={posting || checkingModeration}
-        >
-          {checkingModeration
-            ? "Checking..."
-            : posting
-            ? "Posting..."
-            : "Comment"}
-        </button>
+        <div className="premium-comment-submit-row">
+          <button
+            className="btn btn-primary btn-sm premium-comment-submit-btn"
+            type="submit"
+            disabled={posting || checkingModeration}
+          >
+            {checkingModeration
+              ? "Checking..."
+              : posting
+              ? "Posting..."
+              : "Comment"}
+          </button>
+        </div>
       </form>
 
       {error ? <p className="error-text">{error}</p> : null}
@@ -577,11 +587,12 @@ function CommentSection({ postId }) {
 
 function FeedHeader() {
   return (
-    <div className="feed-hero glass-card">
-      <div>
+    <div className="feed-hero glass-card premium-feed-hero">
+      <div className="premium-feed-hero-content">
+        <span className="premium-feed-eyebrow">Community</span>
         <h2 className="page-title">Community Feed</h2>
 
-        <p className="page-subtitle">
+        <p className="page-subtitle premium-feed-subtitle">
           Share progress, motivation, wins, setbacks, and support from the
           community.
         </p>
@@ -615,7 +626,7 @@ export default function Feed() {
 
   const emptyState = useMemo(
     () => (
-      <section className="glass-card">
+      <section className="glass-card premium-feed-empty-state">
         <p>No posts yet.</p>
       </section>
     ),
@@ -624,10 +635,10 @@ export default function Feed() {
 
   if (loading) {
     return (
-      <div className="fade-in">
+      <div className="fade-in premium-feed-page">
         <FeedHeader />
 
-        <section className="glass-card">
+        <section className="glass-card premium-feed-empty-state">
           <p>Loading posts...</p>
         </section>
       </div>
@@ -636,7 +647,7 @@ export default function Feed() {
 
   if (error) {
     return (
-      <div className="fade-in">
+      <div className="fade-in premium-feed-page">
         <FeedHeader />
         <p className="error-text">{error}</p>
       </div>
@@ -644,20 +655,20 @@ export default function Feed() {
   }
 
   return (
-    <div className="fade-in">
+    <div className="fade-in premium-feed-page">
       <FeedHeader />
 
       {posts.length === 0 ? (
         emptyState
       ) : (
-        <div className="feed-stack modern-feed-stack">
+        <div className="feed-stack modern-feed-stack premium-feed-stack">
           {posts.map((post) => (
             <section
-              className="glass-card community-post-card modern-post-card"
+              className="glass-card community-post-card modern-post-card premium-post-card"
               key={post.id}
             >
-              <div className="community-post-head modern-post-head">
-                <div className="community-post-author-wrap">
+              <div className="community-post-head modern-post-head premium-post-head">
+                <div className="community-post-author-wrap premium-post-author-wrap">
                   <Link
                     to={`/app/profile/${post.author?.id || post.user_id}`}
                     className="feed-author-link"
@@ -665,17 +676,17 @@ export default function Feed() {
                     <Avatar author={post.author} />
                   </Link>
 
-                  <div>
+                  <div className="premium-post-author-meta">
                     <Link
                       to={`/app/profile/${post.author?.id || post.user_id}`}
                       className="feed-author-link"
                     >
-                      <h3 className="community-post-author-name">
+                      <h3 className="community-post-author-name premium-post-author-name">
                         {getDisplayName(post.author)}
                       </h3>
                     </Link>
 
-                    <div className="post-meta-inline">
+                    <div className="post-meta-inline premium-post-meta-inline">
                       <span
                         className="feed-subtitle"
                         title={formatDate(post.created_at)}
@@ -697,27 +708,29 @@ export default function Feed() {
                   </div>
                 </div>
 
-                <button type="button" className="post-more-btn">
+                <button type="button" className="post-more-btn premium-post-more-btn" aria-label="Post options">
                   •••
                 </button>
               </div>
 
-              <p className="community-post-body modern-post-body">
-                {post.content || "No content"}
-              </p>
+              <div className="premium-post-content">
+                <p className="community-post-body modern-post-body premium-post-body">
+                  {post.content || "No content"}
+                </p>
 
-              {post.tags?.length ? (
-                <div className="tag-row">
-                  {post.tags.map((tag, idx) => (
-                    <span
-                      className="tag-pill"
-                      key={`${post.id}-${tag}-${idx}`}
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+                {post.tags?.length ? (
+                  <div className="tag-row premium-tag-row">
+                    {post.tags.map((tag, idx) => (
+                      <span
+                        className="tag-pill"
+                        key={`${post.id}-${tag}-${idx}`}
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
 
               <MediaPreview
                 mediaUrl={post.media_url}
@@ -725,7 +738,7 @@ export default function Feed() {
               />
 
               {post.workout_data?.length ? (
-                <div className="workout-post-highlight">
+                <div className="workout-post-highlight premium-workout-post-highlight">
                   <p className="workout-post-highlight-text">
                     Structured workout detected from this post
                   </p>
@@ -733,12 +746,14 @@ export default function Feed() {
                 </div>
               ) : null}
 
-              <ReactionButton
-                objectType="post"
-                objectId={post.id}
-                counts={post.reaction_counts}
-                onReact={loadPosts}
-              />
+              <div className="premium-post-reactions">
+                <ReactionButton
+                  objectType="post"
+                  objectId={post.id}
+                  counts={post.reaction_counts}
+                  onReact={loadPosts}
+                />
+              </div>
 
               <PostAnalysisSection postId={post.id} />
 

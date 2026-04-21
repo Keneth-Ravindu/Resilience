@@ -15,12 +15,17 @@ function WorkoutPreviewSection({ workoutPreview }) {
   if (!workoutPreview || workoutPreview.length === 0) return null;
 
   return (
-    <section className="glass-card workout-preview-section">
-      <div className="section-head">
-        <h3>Workout Preview</h3>
-        <p className="feed-subtitle">
-          These exercises will be attached to your post.
-        </p>
+    <section className="glass-card workout-preview-section premium-createpost-workout-section">
+      <div className="section-head premium-createpost-section-head">
+        <div>
+          <h3>Workout Preview</h3>
+          <p className="feed-subtitle">
+            These exercises will be attached to your post.
+          </p>
+        </div>
+        <span className="premium-createpost-preview-badge">
+          {workoutPreview.length} detected
+        </span>
       </div>
 
       <div className="workout-grid">
@@ -324,21 +329,22 @@ export default function CreatePost() {
   const selectedFileName = selectedFile?.name || "No file selected";
 
   return (
-    <div className="fade-in create-post-page">
-      <div className="page-head-with-actions">
-        <div>
+    <div className="fade-in create-post-page premium-createpost-page">
+      <div className="glass-card premium-createpost-hero">
+        <div className="premium-createpost-hero-content">
+          <span className="premium-createpost-eyebrow">Create</span>
           <h2 className="page-title">Create Post</h2>
-          <p className="page-subtitle">
+          <p className="page-subtitle premium-createpost-subtitle">
             Share your gym progress, thoughts, achievements, or motivation.
           </p>
         </div>
       </div>
 
-      <section className="glass-card create-post-card">
+      <section className="glass-card create-post-card premium-createpost-card">
         <form onSubmit={submitPost} className="form-stack">
-          <div className="create-post-grid">
-            <div className="create-post-main">
-              <div className="field">
+          <div className="create-post-grid premium-createpost-grid">
+            <div className="create-post-main premium-createpost-main">
+              <div className="field premium-createpost-field">
                 <label>Original Post Content</label>
                 <textarea
                   rows="8"
@@ -360,7 +366,7 @@ export default function CreatePost() {
                 autoTrigger={moderationResult?.is_toxic}
               />
 
-              <div className="field">
+              <div className="field premium-createpost-field">
                 <label>Manual / Final Version</label>
                 <textarea
                   rows="6"
@@ -374,15 +380,8 @@ export default function CreatePost() {
                   }}
                 />
               </div>
-
-              <div className="journal-helper-note">
-                <p className="feed-meta">
-                  When you submit, the final version will be used if provided.
-                  Otherwise, the original post content will be saved.
-                </p>
-              </div>
-
-              <div className="quick-actions">
+              
+              <div className="premium-createpost-toolbar">
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -391,21 +390,21 @@ export default function CreatePost() {
                 >
                   {previewLoading ? "Updating Preview..." : "Workout Refresh"}
                 </button>
-              </div>
 
-              <p className="feed-meta">
-                {previewLoading
-                  ? "Detecting exercises..."
-                  : workoutPreview.length > 0
-                  ? "Live workout preview"
-                  : ""}
-              </p>
+                <p className="feed-meta premium-createpost-toolbar-meta">
+                  {previewLoading
+                    ? "Detecting exercises..."
+                    : workoutPreview.length > 0
+                    ? "Live workout preview"
+                    : "AI workout extraction updates automatically"}
+                </p>
+              </div>
 
               {previewError ? <p className="error-text">{previewError}</p> : null}
 
               <WorkoutPreviewSection workoutPreview={workoutPreview} />
 
-              <div className="field">
+              <div className="field premium-createpost-field">
                 <label>Tags (comma separated)</label>
                 <input
                   type="text"
@@ -416,16 +415,18 @@ export default function CreatePost() {
               </div>
             </div>
 
-            <aside className="create-post-side">
-              <section className="create-post-upload-box">
-                <div className="section-head">
-                  <h3>Media</h3>
-                  <p className="feed-subtitle">
-                    Add one image or video to make your post more engaging.
-                  </p>
+            <aside className="create-post-side premium-createpost-side">
+              <section className="create-post-upload-box premium-createpost-upload-box">
+                <div className="section-head premium-createpost-section-head">
+                  <div>
+                    <h3>Media</h3>
+                    <p className="feed-subtitle">
+                      Add one image or video to make your post more engaging.
+                    </p>
+                  </div>
                 </div>
 
-                <label className="create-post-file-label">
+                <label className="create-post-file-label premium-createpost-file-label">
                   <input
                     type="file"
                     accept="image/*,video/mp4,video/webm,video/quicktime"
@@ -439,7 +440,7 @@ export default function CreatePost() {
                 </label>
 
                 {selectedFile ? (
-                  <div className="create-post-preview-card">
+                  <div className="create-post-preview-card premium-createpost-preview-card">
                     {selectedFile.type.startsWith("image/") ? (
                       <img
                         src={previewUrl}
@@ -453,12 +454,12 @@ export default function CreatePost() {
                     ) : null}
                   </div>
                 ) : (
-                  <div className="create-post-empty-preview">
+                  <div className="create-post-empty-preview premium-createpost-empty-preview">
                     <span>No media selected yet.</span>
                   </div>
                 )}
 
-                <div className="create-post-action-row">
+                <div className="create-post-action-row premium-createpost-action-row">
                   <button
                     className="btn btn-secondary"
                     type="button"
@@ -486,7 +487,7 @@ export default function CreatePost() {
             </aside>
           </div>
 
-          <div className="create-post-submit-row">
+          <div className="create-post-submit-row premium-createpost-submit-row">
             <button
               className="btn btn-primary create-post-submit-btn"
               type="submit"
@@ -501,8 +502,8 @@ export default function CreatePost() {
           </div>
         </form>
 
-        {message ? <p className="success-text">{message}</p> : null}
-        {error ? <p className="error-text">{error}</p> : null}
+        {message ? <p className="success-text premium-createpost-message">{message}</p> : null}
+        {error ? <p className="error-text premium-createpost-message">{error}</p> : null}
       </section>
 
       <BlockedContentModal

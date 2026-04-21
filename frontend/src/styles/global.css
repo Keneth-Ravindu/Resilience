@@ -474,13 +474,16 @@ h4,
 .journal-grid,
 .landing-feature-grid {
   display: grid;
-  gap: 16px;
+  gap: 25px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .card-grid,
 .summary-grid,
 .landing-feature-grid {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  
 }
 
 .stats-grid {
@@ -498,6 +501,7 @@ h4,
 .card-head,
 .section-head {
   margin-bottom: 12px;
+  
 }
 
 .section-head h3 {
@@ -2805,3 +2809,2106 @@ h4,
   text-transform: uppercase;
 }
 
+/* =========================
+   🔥 UI UPGRADE LAYER
+========================= */
+
+:root {
+  --primary: #ff3b30;
+  --secondary: #7c5cff;
+  --accent-gradient: linear-gradient(135deg, #ff3b30, #7c5cff);
+
+  --glass-strong: rgba(255, 255, 255, 0.08);
+  --glass-soft: rgba(255, 255, 255, 0.03);
+
+  --card-glow: 0 10px 40px rgba(124, 92, 255, 0.15);
+}
+
+/* =========================
+   GLOBAL IMPROVEMENTS
+========================= */
+
+.glass-card,
+.simple-card {
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.05),
+    rgba(255,255,255,0.02)
+  );
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  transition: all 0.25s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+}
+
+/* =========================
+   BUTTONS (NEXT LEVEL)
+========================= */
+
+.btn-primary {
+  background: var(--accent-gradient);
+  border: none;
+  box-shadow: 0 10px 25px rgba(255, 59, 48, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 18px 40px rgba(124, 92, 255, 0.35);
+}
+
+/* =========================
+   NAVBAR IMPROVEMENT
+========================= */
+
+.topbar {
+  background: rgba(10, 10, 14, 0.75);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.navbar-notification-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.navbar-notification-btn:hover {
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 15px rgba(255, 59, 48, 0.2);
+}
+
+/* =========================
+   FEED POSTS (MAJOR UPGRADE)
+========================= */
+
+.modern-post-card {
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.04),
+    rgba(255,255,255,0.02)
+  );
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  transition: all 0.25s ease;
+}
+
+.modern-post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 60px rgba(0,0,0,0.5);
+}
+
+/* =========================
+   INPUT FIELDS
+========================= */
+
+input,
+textarea,
+select {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+input:focus,
+textarea:focus {
+  border-color: rgba(124, 92, 255, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
+}
+
+/* =========================
+   WORKOUT CARDS 🔥
+========================= */
+
+.workout-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.05),
+    rgba(255,255,255,0.02)
+  );
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.25s ease;
+}
+
+.workout-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--card-glow);
+}
+
+/* =========================
+   NOTIFICATIONS (CLEANER)
+========================= */
+
+.navbar-notification-item {
+  background: rgba(255,255,255,0.04);
+}
+
+.navbar-notification-item-unread {
+  background: linear-gradient(
+    135deg,
+    rgba(255,59,48,0.15),
+    rgba(124,92,255,0.08)
+  );
+}
+
+/* =========================
+   TAGS (MORE MODERN)
+========================= */
+
+.tag-pill {
+  background: linear-gradient(
+    135deg,
+    rgba(255,59,48,0.2),
+    rgba(124,92,255,0.1)
+  );
+  border: none;
+  color: #fff;
+}
+
+/* =========================
+   CARDS MICRO INTERACTION
+========================= */
+
+.feed-card,
+.community-post-card {
+  transition: all 0.2s ease;
+}
+
+.feed-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+}
+
+/* =========================
+   SCROLLBAR (PREMIUM FEEL)
+========================= */
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ff3b30, #7c5cff);
+}
+
+/* =========================
+   SMALL DETAILS = BIG IMPACT
+========================= */
+
+.page-title {
+  background: linear-gradient(135deg, #fff, #bdbdff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-link.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255,59,48,0.2),
+    rgba(124,92,255,0.1)
+  );
+  border: none;
+}
+
+/* =========================
+Start from here for new features of page improvements
+========================= */
+
+/* =========================
+   NAVBAR PREMIUM REFINEMENT
+   Scoped upgrade for Navbar.jsx
+========================= */
+
+.premium-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  gap: 20px;
+  padding: 16px 24px;
+  background:
+    linear-gradient(180deg, rgba(10, 10, 14, 0.92), rgba(10, 10, 14, 0.82)),
+    radial-gradient(circle at top left, rgba(255, 59, 48, 0.12), transparent 28%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(20px);
+}
+
+.premium-brand-wrap {
+  gap: 14px;
+}
+
+.premium-brand-logo-shell {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.03)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.premium-brand-text {
+  min-width: 0;
+}
+
+.premium-brand-text .brand-title {
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.premium-brand-subtitle {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.03em;
+}
+
+.premium-search-wrap {
+  width: 100%;
+}
+
+.premium-search-shell {
+  position: relative;
+}
+
+.premium-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.premium-search-input {
+  padding-left: 42px;
+  height: 50px;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.premium-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.premium-search-input:focus {
+  border-color: rgba(255, 59, 48, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(255, 59, 48, 0.09),
+    0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.premium-search-dropdown {
+  margin-top: 2px;
+  padding: 12px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(18, 18, 22, 0.96), rgba(14, 14, 18, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+}
+
+.premium-search-result-card {
+  align-items: center;
+  padding: 4px 0;
+  border-radius: 18px;
+}
+
+.premium-search-result {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 18px;
+}
+
+.premium-search-result:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.055),
+    rgba(255, 255, 255, 0.025)
+  );
+}
+
+.navbar-search-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.navbar-search-status {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.premium-search-actions {
+  justify-content: flex-end;
+}
+
+.premium-topbar-actions {
+  gap: 14px;
+}
+
+.premium-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.premium-icon-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 59, 48, 0.08);
+}
+
+.premium-notification-dropdown {
+  padding: 16px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(18, 18, 22, 0.98), rgba(14, 14, 18, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+}
+
+.premium-notification-head {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.premium-notification-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.premium-notification-subtitle {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.premium-notification-item {
+  border-radius: 18px;
+  padding: 14px 15px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.025));
+}
+
+.premium-notification-item:hover {
+  transform: translateY(-2px);
+}
+
+.premium-navbar-user {
+  gap: 12px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-navbar-user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.premium-navbar-user-status {
+  font-size: 0.75rem;
+  color: rgba(120, 235, 170, 0.9);
+  font-weight: 600;
+}
+
+.premium-logout-btn {
+  min-height: 46px;
+  padding-inline: 16px;
+  border-radius: 14px;
+}
+
+/* responsive cleanup */
+@media (max-width: 1100px) {
+  .premium-navbar {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-topbar-actions {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-navbar {
+    padding: 14px 16px;
+    gap: 14px;
+  }
+
+  .premium-brand-logo-shell {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+  }
+
+  .premium-search-input {
+    height: 46px;
+    border-radius: 16px;
+  }
+
+  .premium-navbar-user {
+    padding-right: 8px;
+  }
+
+  .premium-navbar-user-status {
+    display: none;
+  }
+
+  .premium-logout-btn {
+    min-height: 42px;
+    padding-inline: 14px;
+  }
+
+  .premium-search-dropdown,
+  .premium-notification-dropdown {
+    border-radius: 20px;
+  }
+}
+
+/* =========================
+   FEED PREMIUM REFINEMENT
+   Scoped upgrade for Feed.jsx
+========================= */
+
+.premium-feed-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.premium-feed-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 148px;
+  padding: 26px 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(124, 92, 255, 0.12), transparent 24%),
+    radial-gradient(circle at left center, rgba(255, 59, 48, 0.12), transparent 28%),
+    linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+}
+
+.premium-feed-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+}
+
+.premium-feed-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb1aa;
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.14);
+}
+
+.premium-feed-subtitle {
+  max-width: 680px;
+  line-height: 1.7;
+}
+
+.premium-feed-stack {
+  gap: 18px;
+}
+
+.premium-feed-empty-state {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.premium-post-card {
+  padding: 20px;
+  border-radius: 26px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.022));
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.premium-post-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 26px 60px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.premium-post-head {
+  margin-bottom: 14px;
+}
+
+.premium-post-author-wrap {
+  gap: 14px;
+}
+
+.premium-post-author-meta {
+  min-width: 0;
+}
+
+.premium-post-author-name {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.premium-post-meta-inline {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.premium-post-more-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 1.05rem;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.premium-post-more-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 59, 48, 0.16);
+}
+
+.premium-post-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.premium-post-body {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.82;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.premium-tag-row {
+  margin-top: 2px;
+}
+
+.premium-feed-media-wrap {
+  margin-top: 16px;
+  margin-bottom: 18px;
+  border-radius: 22px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.24);
+}
+
+.premium-workout-post-highlight {
+  margin-top: 2px;
+  margin-bottom: 4px;
+  padding: 16px;
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 59, 48, 0.08), rgba(124, 92, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.premium-post-reactions {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-analysis-block {
+  padding-top: 16px;
+  margin-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-comment-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-comment-section-head {
+  margin-bottom: 14px;
+}
+
+.premium-comment-section-head h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.premium-comment-count {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.premium-comment-card {
+  padding: 14px 15px;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.comment-time {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.premium-comment-form {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.038), rgba(255,255,255,0.02));
+}
+
+.premium-comment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.premium-comment-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.premium-comment-label {
+  color: #ff9e97;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.premium-comment-form textarea {
+  min-height: 92px;
+  border-radius: 18px;
+  line-height: 1.65;
+}
+
+.premium-comment-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.premium-comment-submit-btn {
+  min-width: 140px;
+}
+
+@media (max-width: 980px) {
+  .premium-comment-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-feed-hero {
+    min-height: 132px;
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+
+  .premium-post-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .premium-feed-media-wrap {
+    border-radius: 18px;
+  }
+
+  .premium-workout-post-highlight,
+  .premium-comment-form {
+    border-radius: 18px;
+  }
+
+  .premium-comment-submit-row {
+    justify-content: stretch;
+  }
+
+  .premium-comment-submit-btn {
+    width: 100%;
+  }
+}
+
+/* =========================
+   FEED PAGE FINAL THEME
+   Dashboard-style dark premium
+========================= */
+
+.premium-feed-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.premium-feed-page::before {
+  content: "";
+  position: fixed;
+  inset: var(--topbar-height) 0 0 var(--sidebar-width);
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 90, 79, 0.08), transparent 22%),
+    radial-gradient(circle at 82% 12%, rgba(139, 92, 246, 0.05), transparent 18%),
+    linear-gradient(180deg, #050507 0%, #09090c 42%, #0d0d12 100%);
+}
+
+.premium-feed-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* hero */
+.premium-feed-hero {
+  min-height: 144px;
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 90, 79, 0.08), transparent 24%),
+    linear-gradient(145deg, rgba(20, 20, 26, 0.96), rgba(13, 13, 18, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.premium-feed-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb0a8;
+  background: rgba(255, 90, 79, 0.1);
+  border: 1px solid rgba(255, 90, 79, 0.16);
+}
+
+.premium-feed-subtitle {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* feed cards */
+.premium-post-card {
+  padding: 20px;
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(22, 22, 28, 0.96), rgba(14, 14, 18, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-post-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(255, 90, 79, 0.04);
+}
+
+.premium-post-author-name {
+  color: #ffffff;
+}
+
+.premium-post-body {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.premium-post-meta-inline .feed-subtitle {
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.post-meta-dot {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.premium-post-more-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text);
+}
+
+.premium-post-more-btn:hover {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(255, 90, 79, 0.16);
+}
+
+/* tags */
+.tag-pill {
+  background: rgba(255, 90, 79, 0.08);
+  border: 1px solid rgba(255, 90, 79, 0.14);
+  color: #ffb0a8;
+}
+
+/* media */
+.premium-feed-media-wrap {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+/* workout highlight */
+.premium-workout-post-highlight {
+  background:
+    linear-gradient(145deg, rgba(28, 18, 18, 0.92), rgba(18, 14, 18, 0.9));
+  border: 1px solid rgba(255, 90, 79, 0.1);
+}
+
+.workout-post-badge {
+  background: rgba(255, 90, 79, 0.1);
+  border: 1px solid rgba(255, 90, 79, 0.16);
+  color: #ffb0a8;
+}
+
+.workout-post-highlight-text {
+  color: #ffb9b3;
+}
+
+/* section dividers */
+.premium-post-reactions,
+.premium-analysis-block,
+.premium-comment-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* comments */
+.premium-comment-count {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.premium-comment-card {
+  background:
+    linear-gradient(145deg, rgba(26, 26, 32, 0.94), rgba(18, 18, 24, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.comment-author-name {
+  color: #ffffff;
+}
+
+.comment-time,
+.feed-meta {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.premium-comment-form {
+  background:
+    linear-gradient(145deg, rgba(22, 22, 28, 0.95), rgba(15, 15, 20, 0.93));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.premium-comment-label {
+  color: #ffb0a8;
+}
+
+/* empty/loading card */
+.premium-feed-empty-state {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background:
+    linear-gradient(145deg, rgba(22, 22, 28, 0.94), rgba(15, 15, 20, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* mobile */
+@media (max-width: 980px) {
+  .premium-feed-page::before {
+    inset: var(--topbar-height) 0 0 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-feed-hero {
+    min-height: 128px;
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+
+  .premium-post-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .premium-feed-media-wrap,
+  .premium-workout-post-highlight,
+  .premium-comment-form {
+    border-radius: 18px;
+  }
+}
+
+/* =========================
+  FEED FINAL CLEAN THEME 
+========================= */
+
+.premium-feed-page::before {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 59, 48, 0.06), transparent 20%),
+    radial-gradient(circle at 90% 10%, rgba(124, 92, 255, 0.05), transparent 18%),
+    linear-gradient(180deg, #050506 0%, #09090c 45%, #0c0c10 100%);
+}
+
+/* HERO — CLEAN + SUBTLE */
+.premium-feed-hero {
+  background:
+    linear-gradient(145deg, rgba(18,18,24,0.96), rgba(12,12,16,0.94));
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* POSTS — STRONGER SEPARATION */
+.premium-post-card {
+  background:
+    linear-gradient(145deg, rgba(20,20,26,0.96), rgba(12,12,16,0.94));
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+}
+
+.premium-post-card:hover {
+  box-shadow: 0 22px 50px rgba(0,0,0,0.45);
+}
+
+/* TEXT IMPROVEMENT */
+.premium-post-body {
+  color: rgba(255,255,255,0.92);
+}
+
+.premium-post-meta-inline .feed-subtitle {
+  color: rgba(255,255,255,0.6);
+}
+
+/* TAGS */
+.tag-pill {
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.12);
+  color: #ff9a90;
+}
+
+/* WORKOUT SECTION */
+.premium-workout-post-highlight {
+  background:
+    linear-gradient(145deg, rgba(24,18,18,0.6), rgba(14,12,14,0.6));
+  border: 1px solid rgba(255, 59, 48, 0.08);
+}
+
+/* REMOVE RED GLOW INSIDE */
+.workout-card {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.workout-card:hover {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* COMMENTS */
+.premium-comment-card {
+  background:
+    linear-gradient(145deg, rgba(18,18,24,0.95), rgba(12,12,16,0.92));
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* COMMENT */
+.premium-comment-form {
+  background:
+    linear-gradient(145deg, rgba(16,16,20,0.96), rgba(10,10,14,0.94));
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* DIVIDERS */
+.premium-post-reactions,
+.premium-analysis-block,
+.premium-comment-section {
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: linear-gradient(135deg, #ff3b30, #ff6a5f);
+}
+
+/* LIKE BUTTON */
+.ig-like-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* EMPTY STATE */
+.premium-feed-empty-state {
+  background:
+    linear-gradient(145deg, rgba(18,18,24,0.95), rgba(12,12,16,0.92));
+}
+
+/* =========================
+   CREATE POST PREMIUM REFINEMENT
+   Scoped upgrade for CreatePost.jsx
+========================= */
+
+.premium-createpost-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.premium-createpost-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 144px;
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 59, 48, 0.08), transparent 24%),
+    linear-gradient(145deg, rgba(18, 18, 24, 0.96), rgba(12, 12, 16, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.premium-createpost-hero-content {
+  max-width: 760px;
+}
+
+.premium-createpost-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb0a8;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.16);
+}
+
+.premium-createpost-subtitle {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.premium-createpost-card {
+  padding: 22px;
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(20, 20, 26, 0.96), rgba(12, 12, 16, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-createpost-grid {
+  align-items: start;
+  gap: 20px;
+}
+
+.premium-createpost-main,
+.premium-createpost-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.premium-createpost-field {
+  gap: 10px;
+}
+
+.premium-createpost-field label {
+  color: #ffb0a8;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.premium-createpost-field textarea,
+.premium-createpost-field input {
+  border-radius: 18px;
+}
+
+.premium-createpost-field textarea {
+  line-height: 1.72;
+  min-height: 170px;
+}
+
+.premium-createpost-field input {
+  min-height: 50px;
+}
+
+.premium-createpost-helper-note {
+  margin-top: -2px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.premium-createpost-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 0 0;
+}
+
+.premium-createpost-toolbar-meta {
+  margin: 0;
+}
+
+.premium-createpost-workout-section {
+  padding: 18px;
+  border-radius: 24px;
+  background:
+    linear-gradient(145deg, rgba(22, 16, 18, 0.92), rgba(14, 12, 16, 0.9));
+  border: 1px solid rgba(255, 59, 48, 0.08);
+}
+
+.premium-createpost-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.premium-createpost-section-head h3 {
+  margin: 0 0 6px;
+}
+
+.premium-createpost-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.14);
+  color: #ffb0a8;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.premium-createpost-upload-box {
+  padding: 18px;
+  border-radius: 24px;
+  background:
+    linear-gradient(145deg, rgba(18, 18, 24, 0.94), rgba(12, 12, 16, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-createpost-file-label {
+  min-height: 58px;
+  padding: 14px;
+  border-radius: 18px;
+}
+
+.premium-createpost-preview-card {
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.premium-createpost-empty-preview {
+  min-height: 220px;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.premium-createpost-action-row {
+  margin-top: 4px;
+}
+
+.premium-createpost-submit-row {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-createpost-message {
+  margin-top: 16px;
+}
+
+@media (max-width: 980px) {
+  .premium-createpost-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-createpost-hero {
+    min-height: 128px;
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+
+  .premium-createpost-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .premium-createpost-upload-box,
+  .premium-createpost-workout-section,
+  .premium-createpost-preview-card,
+  .premium-createpost-empty-preview {
+    border-radius: 18px;
+  }
+
+  .premium-createpost-section-head {
+    flex-direction: column;
+  }
+}
+
+/* =========================
+   MY PROFILE PREMIUM REFINEMENT
+   Scoped upgrade for MyProfile.jsx
+========================= */
+
+.premium-myprofile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.premium-myprofile-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 140px;
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 59, 48, 0.07), transparent 24%),
+    linear-gradient(145deg, rgba(18, 18, 24, 0.96), rgba(12, 12, 16, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.premium-myprofile-hero-content {
+  max-width: 760px;
+}
+
+.premium-myprofile-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb0a8;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.16);
+}
+
+.premium-myprofile-subtitle {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.premium-myprofile-header-card {
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(20, 20, 26, 0.96), rgba(12, 12, 16, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-myprofile-header {
+  align-items: center;
+  gap: 18px;
+}
+
+.premium-myprofile-avatar {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.premium-myprofile-meta {
+  gap: 10px;
+}
+
+.premium-myprofile-name {
+  margin-bottom: 0;
+}
+
+.premium-myprofile-status {
+  max-width: 760px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.premium-myprofile-badges {
+  margin-top: 4px;
+}
+
+.premium-myprofile-grid {
+  gap: 18px;
+}
+
+.premium-myprofile-column {
+  gap: 16px;
+}
+
+.premium-myprofile-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.premium-myprofile-section-head .section-title {
+  margin: 0;
+}
+
+.premium-myprofile-count {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.premium-myprofile-content-card {
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(20, 20, 26, 0.95), rgba(12, 12, 16, 0.93));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-myprofile-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.premium-myprofile-card-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.14);
+  color: #ffb0a8;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.premium-myprofile-content-text {
+  margin: 0;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.premium-myprofile-journal-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.premium-myprofile-empty-card {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(18, 18, 24, 0.95), rgba(12, 12, 16, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 700px) {
+  .premium-myprofile-hero,
+  .premium-myprofile-header-card {
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+
+  .premium-myprofile-content-card,
+  .premium-myprofile-empty-card {
+    border-radius: 18px;
+  }
+
+  .premium-myprofile-section-head {
+    align-items: flex-start;
+  }
+}
+
+/* =========================
+   PUBLIC PROFILE PREMIUM REFINEMENT
+   Scoped upgrade for PublicProfile.jsx
+========================= */
+
+.premium-publicprofile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.premium-publicprofile-hero-shell {
+  position: relative;
+  overflow: hidden;
+  min-height: 136px;
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 59, 48, 0.07), transparent 24%),
+    linear-gradient(145deg, rgba(18, 18, 24, 0.96), rgba(12, 12, 16, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.premium-publicprofile-hero-content {
+  max-width: 760px;
+}
+
+.premium-publicprofile-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb0a8;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.16);
+}
+
+.premium-publicprofile-subtitle {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.premium-publicprofile-hero {
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(20, 20, 26, 0.96), rgba(12, 12, 16, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-publicprofile-header {
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.premium-publicprofile-avatar {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.premium-publicprofile-meta {
+  gap: 10px;
+  min-width: 0;
+}
+
+.premium-publicprofile-name {
+  margin-bottom: 0;
+}
+
+.premium-publicprofile-status {
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.premium-publicprofile-badges {
+  margin-top: 4px;
+}
+
+.premium-publicprofile-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.premium-publicprofile-action-row {
+  justify-content: flex-end;
+}
+
+.premium-publicprofile-grid {
+  gap: 18px;
+}
+
+.premium-publicprofile-column {
+  gap: 16px;
+}
+
+.premium-publicprofile-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.premium-publicprofile-section-head .section-title {
+  margin: 0;
+}
+
+.premium-publicprofile-count {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.premium-publicprofile-content-card {
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(20, 20, 26, 0.95), rgba(12, 12, 16, 0.93));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.premium-publicprofile-card-head {
+  margin-bottom: 12px;
+}
+
+.premium-publicprofile-card-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.14);
+  color: #ffb0a8;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.premium-publicprofile-body {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.75;
+}
+
+.premium-publicprofile-media-wrap {
+  margin-top: 14px;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+
+.premium-publicprofile-empty-card {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(18, 18, 24, 0.95), rgba(12, 12, 16, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.premium-publicprofile-back-wrap {
+  margin-top: 2px;
+}
+
+.premium-publicprofile-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.premium-publicprofile-back-link:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 59, 48, 0.14);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 980px) {
+  .premium-publicprofile-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-publicprofile-hero-shell,
+  .premium-publicprofile-hero {
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+
+  .premium-publicprofile-content-card,
+  .premium-publicprofile-empty-card,
+  .premium-publicprofile-media-wrap {
+    border-radius: 18px;
+  }
+
+  .premium-publicprofile-section-head {
+    align-items: flex-start;
+  }
+}
+
+/* ================= CHAT PREMIUM ================= */
+
+.premium-chat-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.premium-chat-hero {
+  padding: 22px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top right, rgba(255,59,48,0.08), transparent 25%),
+    linear-gradient(145deg, rgba(20,20,26,0.95), rgba(12,12,16,0.92));
+}
+
+.premium-chat-eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #ffb0a8;
+  font-weight: 800;
+}
+
+/* GRID */
+.premium-chat-grid {
+  gap: 18px;
+}
+
+/* SIDEBAR */
+.premium-chat-sidebar-card {
+  border-radius: 22px;
+}
+
+.premium-chat-list-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.premium-chat-list-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.chat-start-tag {
+  font-size: 0.7rem;
+  color: #ffb0a8;
+}
+
+/* MAIN */
+.premium-chat-card {
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  height: 75vh;
+}
+
+.premium-chat-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* THREAD */
+.premium-chat-thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 4px;
+}
+
+/* BUBBLES */
+.chat-message-bubble {
+  border-radius: 18px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+}
+
+.chat-message-bubble-own {
+  background: linear-gradient(
+    135deg,
+    rgba(255,59,48,0.2),
+    rgba(255,59,48,0.1)
+  );
+  border: 1px solid rgba(255,59,48,0.3);
+}
+
+/* COMPOSER */
+.premium-chat-composer {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 12px;
+}
+
+.premium-chat-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* EMPTY */
+.premium-chat-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: rgba(255,255,255,0.6);
+}
+
+/* BACK LINK */
+.premium-chat-back-link {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+}
+
+/* =========================
+   CHAT REBALANCE FIX
+   Improves the updated Chat.jsx
+========================= */
+
+.premium-chat-page {
+  gap: 14px;
+}
+
+.premium-chat-hero {
+  padding: 18px 20px;
+  min-height: 118px;
+  border-radius: 22px;
+}
+
+.premium-chat-grid {
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.6fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* sidebar */
+.premium-chat-sidebar {
+  gap: 14px;
+}
+
+.premium-chat-sidebar-card,
+.chat-sidebar-column .glass-card {
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.premium-chat-list {
+  gap: 10px;
+}
+
+.premium-chat-list-item,
+.conversation-list-item {
+  padding: 12px;
+  border-radius: 16px;
+  min-height: 74px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.premium-chat-list-item:hover,
+.conversation-list-item:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.conversation-list-item-active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 59, 48, 0.12),
+    rgba(255, 59, 48, 0.04)
+  );
+  border-color: rgba(255, 59, 48, 0.18);
+}
+
+.chat-list-text strong {
+  font-size: 0.95rem;
+}
+
+.chat-list-preview {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+/* main panel */
+.premium-chat-card {
+  height: auto;
+  min-height: 720px;
+  padding: 16px;
+  border-radius: 24px;
+}
+
+.premium-chat-header {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.premium-chat-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* thread */
+.premium-chat-thread,
+.chat-thread {
+  min-height: 380px;
+  max-height: 430px;
+  padding: 12px;
+  margin: 0 0 14px;
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.018),
+    rgba(255, 255, 255, 0.01)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* message rows */
+.chat-message-row {
+  margin-bottom: 2px;
+}
+
+.chat-message-bubble,
+.chat-message-bubble-own {
+  max-width: 62%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.chat-message-bubble {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-message-bubble-own {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 59, 48, 0.16),
+    rgba(255, 59, 48, 0.08)
+  );
+  border: 1px solid rgba(255, 59, 48, 0.18);
+}
+
+.chat-message-label {
+  margin-bottom: 4px;
+  font-size: 0.76rem;
+  opacity: 0.8;
+}
+
+.chat-message-bubble p {
+  margin: 0 0 6px;
+  font-size: 0.97rem;
+  line-height: 1.5;
+}
+
+.chat-message-bubble .feed-meta {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+/* composer */
+.premium-chat-composer {
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-chat-composer .field {
+  gap: 6px;
+}
+
+.premium-chat-composer textarea {
+  min-height: 92px;
+  border-radius: 16px;
+}
+
+/* make rewrite box feel attached, not like a giant separate section */
+.premium-chat-composer .rewrite-assist-box,
+.premium-chat-composer .rewrite-card {
+  margin-top: 0;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.premium-chat-actions {
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.premium-chat-actions .btn {
+  min-width: 120px;
+}
+
+/* empty state */
+.premium-chat-empty {
+  min-height: 380px;
+  border-radius: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* back link */
+.premium-chat-back-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.premium-chat-back-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 59, 48, 0.14);
+}
+
+/* responsive */
+@media (max-width: 980px) {
+  .premium-chat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-chat-card {
+    min-height: auto;
+  }
+
+  .premium-chat-thread,
+  .chat-thread {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-chat-hero {
+    padding: 16px;
+    min-height: 104px;
+    border-radius: 18px;
+  }
+
+  .premium-chat-sidebar-card,
+  .chat-sidebar-column .glass-card,
+  .premium-chat-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .chat-message-bubble,
+  .chat-message-bubble-own {
+    max-width: 82%;
+  }
+
+  .premium-chat-thread,
+  .chat-thread,
+  .premium-chat-empty {
+    min-height: 300px;
+    max-height: 320px;
+    border-radius: 16px;
+  }
+}

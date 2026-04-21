@@ -33,13 +33,13 @@ function ProfileAvatar({ profile }) {
       <img
         src={resolveMediaUrl(profile.profile_picture_url)}
         alt={displayName}
-        className="public-profile-avatar"
+        className="public-profile-avatar premium-publicprofile-avatar"
       />
     );
   }
 
   return (
-    <div className="public-profile-avatar public-profile-avatar-fallback">
+    <div className="public-profile-avatar public-profile-avatar-fallback premium-publicprofile-avatar">
       {displayName.charAt(0).toUpperCase()}
     </div>
   );
@@ -47,15 +47,18 @@ function ProfileAvatar({ profile }) {
 
 function ProfilePostCard({ post }) {
   return (
-    <article className="glass-card profile-content-card">
-      <div className="profile-content-card-head">
+    <article className="glass-card profile-content-card premium-publicprofile-content-card">
+      <div className="profile-content-card-head premium-publicprofile-card-head">
         <div>
-          <h3 className="profile-content-title">Post</h3>
+          <div className="premium-publicprofile-card-label">Post</div>
+          <h3 className="profile-content-title">Shared update</h3>
           <p className="feed-subtitle">{formatDate(post.created_at)}</p>
         </div>
       </div>
 
-      <p className="community-post-body">{post.content || "No content"}</p>
+      <p className="community-post-body premium-publicprofile-body">
+        {post.content || "No content"}
+      </p>
 
       {post.tags?.length ? (
         <div className="tag-row">
@@ -68,7 +71,7 @@ function ProfilePostCard({ post }) {
       ) : null}
 
       {post.media_url && post.media_type === "image" ? (
-        <div className="feed-media-wrap">
+        <div className="feed-media-wrap premium-publicprofile-media-wrap">
           <img
             src={resolveMediaUrl(post.media_url)}
             alt="Post media"
@@ -78,7 +81,7 @@ function ProfilePostCard({ post }) {
       ) : null}
 
       {post.media_url && post.media_type === "video" ? (
-        <div className="feed-media-wrap">
+        <div className="feed-media-wrap premium-publicprofile-media-wrap">
           <video className="feed-media-video" controls>
             <source src={resolveMediaUrl(post.media_url)} />
           </video>
@@ -90,21 +93,22 @@ function ProfilePostCard({ post }) {
 
 function ProfileJournalCard({ journal }) {
   return (
-    <article className="glass-card profile-content-card">
-      <div className="profile-content-card-head">
+    <article className="glass-card profile-content-card premium-publicprofile-content-card">
+      <div className="profile-content-card-head premium-publicprofile-card-head">
         <div>
-          <h3 className="profile-content-title">{journal.title || "Untitled Journal"}</h3>
+          <div className="premium-publicprofile-card-label">Journal</div>
+          <h3 className="profile-content-title">
+            {journal.title || "Untitled Journal"}
+          </h3>
           <p className="feed-subtitle">{formatEntryDate(journal.entry_date)}</p>
         </div>
 
         {journal.visibility ? (
-          <span className="tag-pill">
-            {journal.visibility}
-          </span>
+          <span className="tag-pill">{journal.visibility}</span>
         ) : null}
       </div>
 
-      <p className="profile-journal-body">
+      <p className="profile-journal-body premium-publicprofile-body">
         {journal.content || "No journal content."}
       </p>
     </article>
@@ -292,9 +296,16 @@ export default function PublicProfile() {
 
   if (loadingProfile) {
     return (
-      <div className="fade-in">
-        <h2 className="page-title">Profile</h2>
-        <section className="glass-card">
+      <div className="fade-in premium-publicprofile-page">
+        <div className="glass-card premium-publicprofile-hero-shell">
+          <div className="premium-publicprofile-hero-content">
+            <span className="premium-publicprofile-eyebrow">Profile</span>
+            <h2 className="page-title">Public Profile</h2>
+            <p className="page-subtitle">Loading profile...</p>
+          </div>
+        </div>
+
+        <section className="glass-card premium-publicprofile-empty-card">
           <p>Loading profile...</p>
         </section>
       </div>
@@ -303,32 +314,54 @@ export default function PublicProfile() {
 
   if (error || !profile) {
     return (
-      <div className="fade-in">
-        <h2 className="page-title">Profile</h2>
+      <div className="fade-in premium-publicprofile-page">
+        <div className="glass-card premium-publicprofile-hero-shell">
+          <div className="premium-publicprofile-hero-content">
+            <span className="premium-publicprofile-eyebrow">Profile</span>
+            <h2 className="page-title">Public Profile</h2>
+          </div>
+        </div>
+
         <p className="error-text">{error || "Profile not found."}</p>
       </div>
     );
   }
 
   return (
-    <div className="fade-in">
-      <section className="glass-card public-profile-card public-profile-hero">
-        <div className="public-profile-header">
+    <div className="fade-in premium-publicprofile-page">
+      <div className="glass-card premium-publicprofile-hero-shell">
+        <div className="premium-publicprofile-hero-content">
+          <span className="premium-publicprofile-eyebrow">Profile</span>
+          <h2 className="page-title">Public Profile</h2>
+          <p className="page-subtitle premium-publicprofile-subtitle">
+            View public posts, journals, and connect with this user.
+          </p>
+        </div>
+      </div>
+
+      <section className="glass-card public-profile-card public-profile-hero premium-publicprofile-hero">
+        <div className="public-profile-header premium-publicprofile-header">
           <ProfileAvatar profile={profile} />
 
-          <div className="public-profile-meta">
-            <h2 className="page-title">{displayName}</h2>
-            <p className="page-subtitle">
+          <div className="public-profile-meta premium-publicprofile-meta">
+            <h2 className="page-title premium-publicprofile-name">
+              {displayName}
+            </h2>
+            <p className="page-subtitle premium-publicprofile-status">
               {profile.status_text || "No status added yet."}
             </p>
 
-            <div className="public-profile-badges">
-              {profile.age_range ? <span className="tag-pill">{profile.age_range}</span> : null}
-              {profile.fitness_level ? <span className="tag-pill">{profile.fitness_level}</span> : null}
+            <div className="public-profile-badges premium-publicprofile-badges">
+              {profile.age_range ? (
+                <span className="tag-pill">{profile.age_range}</span>
+              ) : null}
+              {profile.fitness_level ? (
+                <span className="tag-pill">{profile.fitness_level}</span>
+              ) : null}
             </div>
           </div>
 
-          <div className="public-profile-actions">
+          <div className="public-profile-actions premium-publicprofile-actions">
             {friendActionState === "loading" ? (
               <button type="button" className="btn btn-secondary" disabled>
                 Loading...
@@ -338,7 +371,7 @@ export default function PublicProfile() {
                 This is you
               </button>
             ) : friendActionState === "friends" ? (
-              <div className="quick-actions">
+              <div className="quick-actions premium-publicprofile-action-row">
                 <button type="button" className="btn btn-secondary" disabled>
                   Friends
                 </button>
@@ -356,7 +389,7 @@ export default function PublicProfile() {
                 Request Sent
               </button>
             ) : friendActionState === "pending_received" ? (
-              <div className="quick-actions">
+              <div className="quick-actions premium-publicprofile-action-row">
                 <button
                   type="button"
                   className="btn btn-primary"
@@ -389,18 +422,19 @@ export default function PublicProfile() {
         </div>
       </section>
 
-      <div className="profile-page-grid">
-        <section className="profile-column-main">
-          <div className="profile-section-head">
+      <div className="profile-page-grid premium-publicprofile-grid">
+        <section className="profile-column-main premium-publicprofile-column">
+          <div className="profile-section-head premium-publicprofile-section-head">
             <h3 className="section-title">Posts</h3>
+            <span className="premium-publicprofile-count">{posts.length}</span>
           </div>
 
           {loadingPosts ? (
-            <section className="glass-card">
+            <section className="glass-card premium-publicprofile-empty-card">
               <p>Loading posts...</p>
             </section>
           ) : posts.length === 0 ? (
-            <section className="glass-card">
+            <section className="glass-card premium-publicprofile-empty-card">
               <p>No posts shared yet.</p>
             </section>
           ) : (
@@ -412,17 +446,18 @@ export default function PublicProfile() {
           )}
         </section>
 
-        <aside className="profile-column-side">
-          <div className="profile-section-head">
+        <aside className="profile-column-side premium-publicprofile-column">
+          <div className="profile-section-head premium-publicprofile-section-head">
             <h3 className="section-title">Public Journals</h3>
+            <span className="premium-publicprofile-count">{journals.length}</span>
           </div>
 
           {loadingJournals ? (
-            <section className="glass-card">
+            <section className="glass-card premium-publicprofile-empty-card">
               <p>Loading journals...</p>
             </section>
           ) : journals.length === 0 ? (
-            <section className="glass-card">
+            <section className="glass-card premium-publicprofile-empty-card">
               <p>No public journals yet.</p>
             </section>
           ) : (
@@ -435,9 +470,9 @@ export default function PublicProfile() {
         </aside>
       </div>
 
-      <div className="profile-back-link-wrap">
-        <Link to="/app/feed" className="feed-author-link">
-          Back to Feed
+      <div className="profile-back-link-wrap premium-publicprofile-back-wrap">
+        <Link to="/app/feed" className="premium-publicprofile-back-link">
+          ← Back to Feed
         </Link>
       </div>
     </div>

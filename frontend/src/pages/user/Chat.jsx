@@ -495,181 +495,165 @@ export default function Chat() {
   }, [conversations, friendSearchNormalized]);
 
   return (
-    <div className="fade-in">
-      <div className="dashboard-head">
-        <div>
-          <h2 className="page-title">Messages</h2>
-          <p className="page-subtitle">
-            Chat with accepted friends and accepted mentor connections.
-          </p>
-        </div>
+  <div className="fade-in premium-chat-page">
+    {/* HERO */}
+    <div className="glass-card premium-chat-hero">
+      <div>
+        <span className="premium-chat-eyebrow">Messaging</span>
+        <h2 className="page-title">Messages</h2>
+        <p className="page-subtitle">
+          Chat with friends and mentors in a safe, AI-moderated space.
+        </p>
       </div>
-
-      {error ? <p className="error-text">{error}</p> : null}
-
-      <div className="chat-page-grid">
-        <aside className="chat-sidebar-column">
-          <section className="glass-card">
-            <div className="section-head">
-              <h3>Start Chat</h3>
-            </div>
-
-            <div className="field">
-              <input
-                type="text"
-                placeholder="Search friends or chats..."
-                value={friendSearch}
-                onChange={(e) => setFriendSearch(e.target.value)}
-              />
-            </div>
-
-            {friendsLoading ? (
-              <p>Loading friends...</p>
-            ) : availableFriendsForNewChat.length === 0 ? (
-              <p>No new friends available to start a chat.</p>
-            ) : (
-              <div className="simple-list">
-                {availableFriendsForNewChat.map((friend) => (
-                  <button
-                    key={friend.id}
-                    type="button"
-                    className="simple-list-item conversation-list-item"
-                    onClick={() => startConversationWithUser(friend.id)}
-                  >
-                    <div className="conversation-list-item-inner">
-                      <ChatAvatar user={friend} />
-                      <div className="chat-list-text">
-                        <strong>{getDisplayName(friend)}</strong>
-                        <p className="feed-meta">{friend.role || "user"}</p>
-                        <p className="chat-list-preview">Start a new conversation</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <ConversationList
-            conversations={filteredConversations}
-            activeConversationId={activeConversation?.id}
-            onSelectConversation={setActiveConversation}
-            loading={conversationsLoading}
-            currentUserId={currentUserId}
-          />
-        </aside>
-
-        <section className="chat-main-column">
-          <section className="glass-card">
-            <div className="profile-content-card-head">
-              <div>
-                <h3 className="profile-content-title">{activeTitle}</h3>
-                {activeConversation?.other_user ? (
-                  <p className="feed-subtitle">
-                    {activeConversation.other_user?.role || "user"}
-                  </p>
-                ) : (
-                  <p className="feed-subtitle">
-                    Select a conversation to begin.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {!activeConversation ? (
-              <p>No active conversation selected.</p>
-            ) : messagesLoading ? (
-              <p>Loading messages...</p>
-            ) : (
-              <div className="chat-thread" ref={threadRef}>
-                {messages.length === 0 ? (
-                  <p className="feed-meta">
-                    No messages yet. Start the conversation.
-                  </p>
-                ) : (
-                  messages.map((message) => (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      isOwn={message.sender_id === currentUserId}
-                    />
-                  ))
-                )}
-              </div>
-            )}
-
-            {activeConversation ? (
-              <form
-                onSubmit={handleSendMessage}
-                className="form-stack chat-composer"
-              >
-                <div className="field">
-                  <label>Original Message</label>
-                  <textarea
-                    rows="3"
-                    placeholder="Write your message..."
-                    value={content}
-                    onChange={(e) => {
-                      setContent(e.target.value);
-                      setModerationResult(null);
-                      setSendError("");
-                    }}
-                  />
-                </div>
-
-                <RewriteAssistBox
-                  text={content}
-                  onUseRewrite={handleUseRewrite}
-                  label="Chat AI Rewrite"
-                  compact
-                  autoTrigger={moderationResult?.is_toxic}
-                />
-
-                <div className="field">
-                  <label>Manual / Final Version</label>
-                  <textarea
-                    rows="3"
-                    placeholder="Use the AI suggestion here or refine your final version..."
-                    value={finalContent}
-                    onChange={(e) => {
-                      setFinalContent(e.target.value);
-                      setModerationResult(null);
-                      setSendError("");
-                    }}
-                  />
-                </div>
-
-                <div className="quick-actions">
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={sending}
-                  >
-                    {sending ? "Sending..." : "Send Message"}
-                  </button>
-                </div>
-
-                {sendError ? <p className="error-text">{sendError}</p> : null}
-              </form>
-            ) : null}
-          </section>
-        </section>
-      </div>
-
-      <div className="profile-back-link-wrap">
-        <Link to="/app/feed" className="feed-author-link">
-          Back to Feed
-        </Link>
-      </div>
-
-      <BlockedContentModal
-        open={blockedModalOpen}
-        onClose={() => setBlockedModalOpen(false)}
-        title="Message Blocked"
-        message={moderationResult?.message}
-        toxicityLabel={moderationResult?.toxicity_label}
-        primaryEmotion={moderationResult?.primary_emotion}
-      />
     </div>
+
+    {error ? <p className="error-text">{error}</p> : null}
+
+    <div className="chat-page-grid premium-chat-grid">
+      {/* SIDEBAR */}
+      <aside className="chat-sidebar-column premium-chat-sidebar">
+        <section className="glass-card premium-chat-sidebar-card">
+          <div className="section-head">
+            <h3>Start Chat</h3>
+          </div>
+
+          <div className="field">
+            <input
+              type="text"
+              placeholder="Search friends or chats..."
+              value={friendSearch}
+              onChange={(e) => setFriendSearch(e.target.value)}
+            />
+          </div>
+
+          {friendsLoading ? (
+            <p>Loading friends...</p>
+          ) : availableFriendsForNewChat.length === 0 ? (
+            <p>No new friends available.</p>
+          ) : (
+            <div className="simple-list premium-chat-list">
+              {availableFriendsForNewChat.map((friend) => (
+                <button
+                  key={friend.id}
+                  type="button"
+                  className="simple-list-item premium-chat-list-item"
+                  onClick={() => startConversationWithUser(friend.id)}
+                >
+                  <ChatAvatar user={friend} />
+                  <div className="chat-list-text">
+                    <strong>{getDisplayName(friend)}</strong>
+                    <p className="feed-meta">{friend.role || "user"}</p>
+                    <span className="chat-start-tag">Start chat</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <ConversationList
+          conversations={filteredConversations}
+          activeConversationId={activeConversation?.id}
+          onSelectConversation={setActiveConversation}
+          loading={conversationsLoading}
+          currentUserId={currentUserId}
+        />
+      </aside>
+
+      {/* MAIN CHAT */}
+      <section className="chat-main-column premium-chat-main">
+        <section className="glass-card premium-chat-card">
+          {/* HEADER */}
+          <div className="premium-chat-header">
+            <div>
+              <h3>{activeTitle}</h3>
+              <p className="feed-subtitle">
+                {activeConversation?.other_user?.role || "user"}
+              </p>
+            </div>
+          </div>
+
+          {/* THREAD */}
+          {!activeConversation ? (
+            <div className="premium-chat-empty">
+              <p>Select a conversation to start chatting</p>
+            </div>
+          ) : messagesLoading ? (
+            <p>Loading messages...</p>
+          ) : (
+            <div className="chat-thread premium-chat-thread" ref={threadRef}>
+              {messages.length === 0 ? (
+                <p className="feed-meta">No messages yet.</p>
+              ) : (
+                messages.map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    isOwn={message.sender_id === currentUserId}
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* COMPOSER */}
+          {activeConversation && (
+            <form
+              onSubmit={handleSendMessage}
+              className="form-stack premium-chat-composer"
+            >
+              <div className="field">
+                <textarea
+                  rows="2"
+                  placeholder="Type your message..."
+                  value={content}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    setModerationResult(null);
+                    setSendError("");
+                  }}
+                />
+              </div>
+
+              <RewriteAssistBox
+                text={content}
+                onUseRewrite={handleUseRewrite}
+                label="AI Rewrite"
+                compact
+                autoTrigger={moderationResult?.is_toxic}
+              />
+
+              <div className="premium-chat-actions">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={sending}
+                >
+                  {sending ? "Sending..." : "Send"}
+                </button>
+              </div>
+
+              {sendError && <p className="error-text">{sendError}</p>}
+            </form>
+          )}
+        </section>
+      </section>
+    </div>
+
+    <div className="profile-back-link-wrap">
+      <Link to="/app/feed" className="premium-chat-back-link">
+        ← Back to Feed
+      </Link>
+    </div>
+
+    <BlockedContentModal
+      open={blockedModalOpen}
+      onClose={() => setBlockedModalOpen(false)}
+      title="Message Blocked"
+      message={moderationResult?.message}
+      toxicityLabel={moderationResult?.toxicity_label}
+      primaryEmotion={moderationResult?.primary_emotion}
+    />
+  </div>
   );
 }
