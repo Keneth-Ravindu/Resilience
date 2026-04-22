@@ -107,7 +107,7 @@ function WorkoutSection({ workoutData }) {
 
   return (
     <div className="workout-section">
-      <p className="workout-title">💪 Workout Summary</p>
+      <p className="workout-title">Workout Summary</p>
 
       <div className="workout-grid">
         {workoutData.map((exercise, idx) => (
@@ -740,7 +740,6 @@ export default function Feed() {
               {post.workout_data?.length ? (
                 <div className="workout-post-highlight premium-workout-post-highlight">
                   <p className="workout-post-highlight-text">
-                    Structured workout detected from this post
                   </p>
                   <WorkoutSection workoutData={post.workout_data} />
                 </div>

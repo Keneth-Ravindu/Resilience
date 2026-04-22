@@ -128,7 +128,7 @@ export default function Journals() {
           <div>
             <h2 className="page-title">Journals</h2>
             <p className="page-subtitle">
-              View your journals and public community journals.
+              View your journals.
             </p>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function Journals() {
           <div>
             <h2 className="page-title">Journals</h2>
             <p className="page-subtitle">
-              View your journals and public community journals.
+              View your journals.
             </p>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function Journals() {
         <div>
           <h2 className="page-title">Journals</h2>
           <p className="page-subtitle">
-            View your journals and public community journals.
+            View your journals.
           </p>
         </div>
 

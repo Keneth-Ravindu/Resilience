@@ -43,7 +43,7 @@ export default function Login() {
                 nav("/app", { replace: true });
             }
         }   catch {
-            setErr("Login failed");
+            setErr("Invalid email or password.");
         }
     };
 
