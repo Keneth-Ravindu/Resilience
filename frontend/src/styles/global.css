@@ -5246,3 +5246,137 @@ Start from here for new features of page improvements
 .auth-footer a {
   color: #ffb0a8;
 }
+
+/* =========================
+  REGISTER PAGE
+========================= */
+
+.register-auth-card {
+  max-width: 520px;
+}
+
+/* Grid layout for better spacing */
+.auth-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Make inputs span full width when needed */
+.auth-form-grid .field:nth-child(1),
+.auth-form-grid .field:nth-child(2),
+.auth-form-grid .field:nth-child(5),
+.auth-form-grid .field:nth-child(6) {
+  grid-column: span 2;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .auth-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-form-grid .field {
+    grid-column: span 1 !important;
+  }
+}
+
+/* =========================
+   ADMIN DASHBOARD UPGRADE
+========================= */
+
+.admin-user-card {
+  padding: 22px;
+}
+
+.admin-header {
+  margin-bottom: 16px;
+}
+
+.admin-search input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+/* GRID LAYOUT */
+
+.admin-user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* CARD */
+
+.admin-user-card-item {
+  padding: 16px;
+  border-radius: 18px;
+
+  background: rgba(20,20,26,0.85);
+  border: 1px solid rgba(255,255,255,0.06);
+
+  transition: all 0.2s ease;
+}
+
+.admin-user-card-item:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 59, 48, 0.3);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* TOP */
+
+.admin-user-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.admin-user-top h4 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+/* TAGS */
+
+.admin-user-tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* ACTIONS */
+
+.admin-user-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ROLE COLORS */
+
+.admin-role-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.admin-role-pill {
+  background: rgba(255, 59, 48, 0.15);
+  color: #ff6a5f;
+}
+
+.mentor-role-pill {
+  background: rgba(124, 92, 255, 0.15);
+  color: #b3a6ff;
+}
+
+.user-role-pill {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+}

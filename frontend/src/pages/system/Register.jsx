@@ -92,90 +92,106 @@ export default function Register() {
   }
 
   return (
-    <div className="auth-page fade-in">
-      <div className="auth-card">
+    <div className="auth-page fade-in premium-auth-page">
+      <div className="auth-bg-orb auth-orb-1" />
+      <div className="auth-bg-orb auth-orb-2" />
+      <div className="auth-grid-overlay" />
+
+      <div className="auth-card premium-auth-card register-auth-card">
         <div className="auth-glow" />
-        <img src={logo} alt="Resilience Logo" className="auth-logo" />
 
-        <p className="eyebrow">Create account</p>
-        <h2 className="auth-title">Join Resilience</h2>
-        <p className="auth-text">
-          Create your account to start posting, journaling, tracking analytics,
-          and connecting with the community.
-        </p>
+        <div className="auth-header">
+          <img src={logo} alt="Resilience Logo" className="auth-logo" />
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="field">
-            <label>Name</label>
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+          <span className="auth-eyebrow">Create account</span>
+
+          <h2 className="auth-title">Join Resilience</h2>
+
+          <p className="auth-text">
+            Start your journey in fitness, mental resilience, and community support.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="auth-form premium-auth-form">
+          <div className="auth-form-grid">
+            
+            <div className="field premium-field">
+              <label>Name</label>
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <div className="field premium-field">
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="field premium-field">
+              <CustomSelect
+                label="Age Range"
+                value={ageRange}
+                onChange={setAgeRange}
+                options={[
+                  { value: "", label: "Select age range" },
+                  { value: "13-17", label: "13-17" },
+                  { value: "18-24", label: "18-24" },
+                  { value: "25-34", label: "25-34" },
+                  { value: "35-44", label: "35-44" },
+                  { value: "45+", label: "45+" },
+                ]}
+              />
+            </div>
+
+            <div className="field premium-field">
+              <CustomSelect
+                label="Fitness Level"
+                value={fitnessLevel}
+                onChange={setFitnessLevel}
+                options={[
+                  { value: "", label: "Select fitness level" },
+                  { value: "beginner", label: "Beginner" },
+                  { value: "intermediate", label: "Intermediate" },
+                  { value: "advanced", label: "Advanced" },
+                ]}
+              />
+            </div>
+
+            <div className="field premium-field">
+              <label>Password</label>
+              <input
+                type="password"
+                placeholder="Minimum 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <div className="field premium-field">
+              <label>Confirm Password</label>
+              <input
+                type="password"
+                placeholder="Re-enter password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+
           </div>
 
-          <div className="field">
-            <label>Email</label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <CustomSelect
-              label="Age Range"
-              value={ageRange}
-              onChange={setAgeRange}
-              options={[
-                { value: "", label: "Select age range" },
-                { value: "13-17", label: "13-17" },
-                { value: "18-24", label: "18-24" },
-                { value: "25-34", label: "25-34" },
-                { value: "35-44", label: "35-44" },
-                { value: "45+", label: "45+" },
-              ]}
-            />
-          </div>
-
-          <div className="field">
-            <CustomSelect
-              label="Fitness Level"
-              value={fitnessLevel}
-              onChange={setFitnessLevel}
-              options={[
-                { value: "", label: "Select fitness level" },
-                { value: "beginner", label: "Beginner" },
-                { value: "intermediate", label: "Intermediate" },
-                { value: "advanced", label: "Advanced" },
-              ]}
-            />
-          </div>
-
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder="Minimum 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label>Confirm Password</label>
-            <input
-              type="password"
-              placeholder="Re-enter your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-
-          <button className="btn btn-primary" type="submit" disabled={loading}>
+          <button
+            className="btn btn-primary premium-auth-btn"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Creating Account..." : "Register"}
           </button>
         </form>
