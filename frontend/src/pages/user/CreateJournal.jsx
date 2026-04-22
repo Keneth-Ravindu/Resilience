@@ -125,52 +125,55 @@ export default function CreateJournal() {
   }
 
   return (
-    <div className="fade-in">
-      <div className="page-head-with-actions">
-        <div>
+    <div className="fade-in premium-journal-page">
+      <div className="glass-card premium-journal-hero">
+        <div className="premium-journal-hero-content">
+          <span className="premium-journal-eyebrow">Reflection</span>
           <h2 className="page-title">Create Journal</h2>
-          <p className="page-subtitle">
+          <p className="page-subtitle premium-journal-subtitle">
             Capture reflections, mindset, emotional patterns, and progress.
           </p>
         </div>
       </div>
 
-      <section className="glass-card form-card">
+      <section className="glass-card form-card premium-journal-card">
         <form onSubmit={submitJournal} className="form-stack">
-          <div className="create-journal-grid">
-            <div className="create-journal-main">
-              <div className="field">
-                <label>Entry Date</label>
-                <input
-                  type="date"
-                  value={entryDate}
-                  onChange={(e) => setEntryDate(e.target.value)}
-                />
+          <div className="create-journal-grid premium-journal-grid">
+            <div className="create-journal-main premium-journal-main">
+              <div className="premium-journal-top-grid">
+                <div className="field premium-journal-field">
+                  <label>Entry Date</label>
+                  <input
+                    type="date"
+                    value={entryDate}
+                    onChange={(e) => setEntryDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="field premium-journal-field">
+                  <label>Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Push day reflections"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+
+                <div className="field premium-journal-field premium-journal-visibility-field">
+                  <CustomSelect
+                    label="Visibility"
+                    value={visibility}
+                    onChange={setVisibility}
+                    options={[
+                      { value: "private", label: "Private" },
+                      { value: "public", label: "Public" },
+                    ]}
+                  />
+                </div>
               </div>
 
-              <div className="field">
-                <label>Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Push day reflections"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-
-              <div className="field">
-                <CustomSelect
-                  label="Visibility"
-                  value={visibility}
-                  onChange={setVisibility}
-                  options={[
-                    { value: "private", label: "Private" },
-                    { value: "public", label: "Public" },
-                  ]}
-                />
-              </div>
-
-              <div className="field">
+              <div className="field premium-journal-field">
                 <label>Original Journal Content</label>
                 <textarea
                   rows="10"
@@ -192,7 +195,7 @@ export default function CreateJournal() {
                 autoTrigger={moderationResult?.is_toxic}
               />
 
-              <div className="field">
+              <div className="field premium-journal-field">
                 <label>Manual / Final Version</label>
                 <textarea
                   rows="8"
@@ -207,7 +210,7 @@ export default function CreateJournal() {
                 />
               </div>
 
-              <div className="journal-helper-note">
+              <div className="journal-helper-note premium-journal-helper-note">
                 <p className="feed-meta">
                   When you submit, the final version will be used if provided.
                   Otherwise, the original journal content will be saved.
@@ -216,9 +219,9 @@ export default function CreateJournal() {
             </div>
           </div>
 
-          <div className="create-journal-submit-row">
+          <div className="create-journal-submit-row premium-journal-submit-row">
             <button
-              className="btn btn-primary"
+              className="btn btn-primary premium-journal-submit-btn"
               type="submit"
               disabled={loading || checkingModeration}
             >
@@ -231,8 +234,8 @@ export default function CreateJournal() {
           </div>
         </form>
 
-        {message ? <p className="success-text">{message}</p> : null}
-        {error ? <p className="error-text">{error}</p> : null}
+        {message ? <p className="success-text premium-journal-message">{message}</p> : null}
+        {error ? <p className="error-text premium-journal-message">{error}</p> : null}
       </section>
 
       <BlockedContentModal

@@ -146,25 +146,26 @@ export default function UserSearch() {
   }
 
   return (
-    <div className="fade-in">
-      <div className="page-head-with-actions">
-        <div>
+    <div className="fade-in premium-usersearch-page">
+      <div className="glass-card premium-usersearch-hero">
+        <div className="premium-usersearch-hero-content">
+          <span className="premium-usersearch-eyebrow">Community</span>
           <h2 className="page-title">Find Members</h2>
-          <p className="page-subtitle">
+          <p className="page-subtitle premium-usersearch-subtitle">
             Search community members by display name or name.
           </p>
         </div>
       </div>
 
-      <section className="glass-card user-search-card">
-        <form onSubmit={handleSearch} className="user-search-form">
+      <section className="glass-card user-search-card premium-usersearch-card">
+        <form onSubmit={handleSearch} className="user-search-form premium-usersearch-form">
           <input
             type="text"
             placeholder="Search for a member..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button className="btn btn-primary" type="submit" disabled={loading}>
+          <button className="btn btn-primary premium-usersearch-submit" type="submit" disabled={loading}>
             {loading ? "Searching..." : "Search"}
           </button>
         </form>
@@ -172,11 +173,15 @@ export default function UserSearch() {
         {error ? <p className="error-text">{error}</p> : null}
 
         {!searched ? (
-          <p className="feed-meta">Search by display name or name.</p>
+          <div className="premium-usersearch-empty">
+            <p className="feed-meta">Search by display name or name.</p>
+          </div>
         ) : results.length === 0 ? (
-          <p className="feed-meta">No users found.</p>
+          <div className="premium-usersearch-empty">
+            <p className="feed-meta">No users found.</p>
+          </div>
         ) : (
-          <div className="user-search-results">
+          <div className="user-search-results premium-usersearch-results">
             {results.map((user) => {
               const displayName = getDisplayName(user);
               const relation = friendStates[user.id] || {
@@ -185,11 +190,10 @@ export default function UserSearch() {
               };
 
               return (
-                <div key={user.id} className="user-search-result-card">
+                <div key={user.id} className="user-search-result-card premium-usersearch-result-card">
                   <Link
                     to={`/app/profile/${user.id}`}
-                    className="feed-author-link"
-                    style={{ display: "flex", gap: "14px", flex: 1 }}
+                    className="feed-author-link premium-usersearch-link"
                   >
                     {user.profile_picture_url ? (
                       <img
@@ -218,7 +222,7 @@ export default function UserSearch() {
                     </div>
                   </Link>
 
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div className="premium-usersearch-actions">
                     {relation.status === "self" ? (
                       <button type="button" className="btn btn-secondary btn-sm" disabled>
                         You

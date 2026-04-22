@@ -140,7 +140,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <section className="glass-card settings-hero-card">
+      <section className="glass-card settings-hero-card modern-settings-hero">
         <div className="settings-hero-content">
           <div className="settings-avatar-block">
             {currentProfileImage ? (
@@ -171,7 +171,7 @@ export default function Settings() {
       </section>
 
       <div className="settings-grid">
-        <section className="glass-card settings-card">
+        <section className="glass-card settings-card modern-settings-card">
           <div className="section-head">
             <h3>Profile Picture</h3>
             <p className="feed-subtitle">
@@ -195,10 +195,20 @@ export default function Settings() {
             </div>
 
             <div className="settings-upload-controls">
-              <label className="field">
-                <span>Choose Image</span>
-                <input type="file" accept="image/*" onChange={handleFileChange} />
-              </label>
+            <label className="file-upload">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="file-upload-input"
+              />
+
+              <span className="file-upload-btn">Choose File</span>
+
+              <span className="file-upload-name">
+                {file ? file.name : "No file selected"}
+              </span>
+            </label>
 
               <div className="settings-action-row">
                 <button

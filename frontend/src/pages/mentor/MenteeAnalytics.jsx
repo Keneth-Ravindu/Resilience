@@ -132,7 +132,7 @@ function TypeAnalyticsCard({ label, data }) {
   }, [data, selectedEmotions]);
 
   return (
-    <div className="analytics-type-block">
+    <div className="analytics-type-block modern-analytics-block">
       <div className="analytics-type-head">
         <h3>{label}</h3>
         <span className="role-badge">{data?.object_type || label.toLowerCase()}</span>
@@ -144,7 +144,7 @@ function TypeAnalyticsCard({ label, data }) {
 
         <section className="glass-card">
           <h3>Dominant Primary Emotion</h3>
-          <div className="dominant-emotion-box">
+          <div className="dominant-emotion-box highlight-emotion">
             {data?.dominant_primary_emotion_week || "No data"}
           </div>
         </section>
@@ -323,9 +323,17 @@ export default function MenteeAnalytics() {
         </div>
       </section>
 
-      <TypeAnalyticsCard label="Posts" data={data?.by_type?.post} />
-      <TypeAnalyticsCard label="Journals" data={data?.by_type?.journal} />
-      <TypeAnalyticsCard label="Comments" data={data?.by_type?.comment} />
+      <div className="analytics-section">
+        <TypeAnalyticsCard label="Posts" data={data?.by_type?.post} />
+      </div>
+
+      <div className="analytics-section">
+        <TypeAnalyticsCard label="Journals" data={data?.by_type?.journal} />
+      </div>
+
+      <div className="analytics-section">
+        <TypeAnalyticsCard label="Comments" data={data?.by_type?.comment} />
+      </div>
     </div>
   );
 }

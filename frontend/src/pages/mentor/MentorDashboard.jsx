@@ -135,53 +135,59 @@ export default function MentorDashboard() {
         </section>
       </div>
 
-      <section className="glass-card summary-section">
+      <section className="glass-card mentor-overview-card">
         <div className="section-head">
           <h3>Mentee Overview</h3>
         </div>
 
         {mentees.length ? (
-          <div className="summary-grid">
-            {mentees.map((mentee) => (
-              <div className="summary-card" key={mentee.mentee_user_id}>
-                <p className="summary-alert">
-                  {mentee.display_name || `User #${mentee.mentee_user_id}`}
-                </p>
+          <div className="mentor-grid">
+            {mentees.map((mentee) => {
+              const isHigh = mentee.risk_level === "high";
 
-                <p>
-                  <span className="summary-label">Risk level:</span>
-                  <br />
-                  <strong>{mentee.risk_level}</strong>
-                </p>
-
-                <p>
-                  <span className="summary-label">Dominant emotion:</span>
-                  <br />
-                  <strong>{mentee.dominant_emotion || "No data"}</strong>
-                </p>
-
-                <p>
-                  <span className="summary-label">Average toxicity:</span>
-                  <br />
-                  <strong>{Number(mentee.avg_toxicity || 0).toFixed(3)}</strong>
-                </p>
-
-                <p>
-                  <span className="summary-label">Flags:</span>
-                  <br />
-                  <strong>
-                    {mentee.flags?.length ? mentee.flags.join(", ") : "No flags"}
-                  </strong>
-                </p>
-
-                <Link
-                  to={`/mentor/mentees/${mentee.mentee_user_id}/analytics`}
-                  className="btn btn-primary btn-sm"
+              return (
+                <div
+                  className={`mentor-card ${isHigh ? "mentor-card-high" : ""}`}
+                  key={mentee.mentee_user_id}
                 >
-                  Open Analytics
-                </Link>
-              </div>
-            ))}
+                  <div className="mentor-card-top">
+                    <h4>
+                      {mentee.display_name || `User #${mentee.mentee_user_id}`}
+                    </h4>
+                    <RiskBadge level={mentee.risk_level} />
+                  </div>
+
+                  <div className="mentor-metrics">
+                    <div>
+                      <span>Emotion</span>
+                      <strong>{mentee.dominant_emotion || "N/A"}</strong>
+                    </div>
+
+                    <div>
+                      <span>Toxicity</span>
+                      <strong>{Number(mentee.avg_toxicity || 0).toFixed(2)}</strong>
+                    </div>
+                  </div>
+
+                  {mentee.flags?.length > 0 && (
+                    <div className="mentor-flags">
+                      {mentee.flags.map((flag, i) => (
+                        <span key={i} className="tag-pill">
+                          {flag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <Link
+                    to={`/mentor/mentees/${mentee.mentee_user_id}/analytics`}
+                    className="btn btn-primary btn-sm mentor-btn"
+                  >
+                    View Analytics
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p>No active mentees yet.</p>
