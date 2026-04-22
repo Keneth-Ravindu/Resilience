@@ -47,48 +47,59 @@ export default function Login() {
         }
     };
 
-    return (
-        <div className="auth-page fade-in">
-            <div className="auth-card">
-                <div className="auth-glow" />
-                <img src={logo} alt="Resilience Logo" className="auth-logo" />           
-                <p className="eyebrow">Welcome back</p>
-                <h2 className="auth-title">Sign in to Resilience</h2>
-                <p className="auth-text">
-                    Continue to your dashboard, analytics, and mentor tools.
-                </p>
+return (
+    <div className="auth-page fade-in premium-auth-page">
+        <div className="auth-bg-orb auth-orb-1" />
+        <div className="auth-bg-orb auth-orb-2" />
+        <div className="auth-grid-overlay" />
 
-                <form onSubmit={submit} className="auth-form">
-                    <div className="field">
-                        <label>Email</label>
-                        <input
-                        type="text"
-                        placeholder="Enter your email"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        />
-                    </div>
+        <div className="auth-card premium-auth-card">
+        <div className="auth-glow" />
 
-                    <div className="field">
-                        <label>Password</label>
-                        <input
-                        type="password"
-                        placeholder="Enter password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
-                    <button className="btn btn-primary" type="submit">
-                        Login
-                    </button>
-                </form>
-                        
-                {err ? <p className="error-text">{err}</p> : null}
+        <div className="auth-header">
+            <img src={logo} alt="Resilience Logo" className="auth-logo" />
 
-                <p className="auth-footer">
-                    No account yet? <Link to="/register">Register</Link>
-                </p>
-            </div>
+            <span className="auth-eyebrow">Welcome back</span>
+
+            <h2 className="auth-title">Sign in to Resilience</h2>
+
+            <p className="auth-text">
+            Continue to your dashboard, analytics, and community.
+            </p>
         </div>
+
+        <form onSubmit={submit} className="auth-form premium-auth-form">
+            <div className="field premium-field">
+            <label>Email</label>
+            <input
+                type="text"
+                placeholder="Enter your email"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+            />
+            </div>
+
+            <div className="field premium-field">
+            <label>Password</label>
+            <input
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            </div>
+
+            <button className="btn btn-primary premium-auth-btn" type="submit">
+            Login
+            </button>
+        </form>
+
+        {err ? <p className="error-text">{err}</p> : null}
+
+        <p className="auth-footer">
+            No account yet? <Link to="/register">Register</Link>
+        </p>
+        </div>
+    </div>
     );
 }
