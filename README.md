@@ -202,13 +202,29 @@ docker-compose down
 docker-compose down -v
 docker-compose up --build
 ```
-## Services
+
+## Docker Services
 <div align="center">
 
 | Service | URL |
 |--------|----------|
 | PostgreSQL | `localhost:5432` |
 | pgAdmin | `http://localhost:5050` |
+| Rewrite Service | `http://localhost:8002` |
+
+</div>
+
+---
+
+# API Overview
+
+## Docker Services
+<div align="center">
+
+| Endpoint | Description |
+|--------|----------|
+| ```/auth``` | `localhost:5432` |
+| ```/posts``` | `http://localhost:5050` |
 | Rewrite Service | `http://localhost:8002` |
 
 </div>
