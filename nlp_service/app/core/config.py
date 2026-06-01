@@ -2,7 +2,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]  # .../nlp_service
+BASE_DIR = Path(__file__).resolve().parents[2]  
 MODELS_DIR = BASE_DIR / "models"
 
 

@@ -2,7 +2,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-BASE_DIR = Path(__file__).resolve().parents[1]  # rewrite_service/app
+BASE_DIR = Path(__file__).resolve().parents[1]  
 MODELS_DIR = BASE_DIR / "models"
 
 

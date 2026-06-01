@@ -1146,9 +1146,9 @@ def stats_correlations(
     Computes correlation between each emotion score and toxicity_score.
 
     Returns for each emotion:
-      - pearson_r, pearson_p
-      - spearman_r, spearman_p
-      - n (paired samples used)
+    - pearson_r, pearson_p
+    - spearman_r, spearman_p
+    - n (paired samples used)
     """
     t0 = time.perf_counter()
 
